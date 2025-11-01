@@ -1,5 +1,9 @@
 spring:
   datasource:
+    #    url: jdbc:postgres://avnadmin:AVNS_pwe-F6L4kXjsAVVD6yQ@pg-a845b4b-binhnguyen20604-c4de.h.aivencloud.com:24920/defaultdb?sslmode=require
+    #    username: avnadmin
+    #    password: AVNS_pwe-F6L4kXjsAVVD6yQ
+    #    driver-class-name: org.postgresql.Driver
     url: jdbc:postgresql://localhost:5432/clinic
     username: postgres
     password: admin
@@ -13,3 +17,7 @@ spring:
     active: dev
 server:
   port: 8000
+
+jwt:
+  secret: 413F4428472B4B6250655368566D5970337336763979244226452948404D6351
+  expiration: 3600000 # 1 hour in milliseconds
