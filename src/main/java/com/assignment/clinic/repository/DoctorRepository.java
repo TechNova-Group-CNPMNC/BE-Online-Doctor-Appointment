@@ -11,4 +11,8 @@ public interface DoctorRepository extends JpaRepository<Doctor, Long> {
 
     // Tìm kiếm tất cả Doctors có rating lớn hơn hoặc bằng một giá trị
     List<Doctor> findByAverageRatingGreaterThanEqual(BigDecimal rating);
+
+    List<Doctor> findByFullNameContainingIgnoreCase(String fullName);
+
+    List<Doctor> findBySpecialties_NameContainingIgnoreCase(String specialtyName);
 }
