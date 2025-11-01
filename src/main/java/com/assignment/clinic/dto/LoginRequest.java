@@ -1,4 +1,4 @@
-package com.assignment.clinic.controller;
+package com.assignment.clinic.dto;
 
 public class LoginRequest {
     private String email;

@@ -1,4 +1,4 @@
-package com.assignment.clinic.controller;
+package com.assignment.clinic.dto;
 
 import com.assignment.clinic.constants.UserRole;
 import com.assignment.clinic.constants.Gender;

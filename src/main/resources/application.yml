@@ -11,6 +11,9 @@ spring:
         dialect: org.hibernate.dialect.PostgreSQLDialect
   profiles:
     active: dev
+  sql:
+    init:
+      mode: always
 server:
   port: 8000
 

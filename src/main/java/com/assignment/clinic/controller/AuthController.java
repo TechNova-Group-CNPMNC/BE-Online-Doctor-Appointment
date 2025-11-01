@@ -1,5 +1,8 @@
 package com.assignment.clinic.controller;
 
+import com.assignment.clinic.dto.AuthResponse;
+import com.assignment.clinic.dto.LoginRequest;
+import com.assignment.clinic.dto.RegisterRequest;
 import com.assignment.clinic.entity.User;
 import com.assignment.clinic.constants.UserRole;
 import com.assignment.clinic.service.AuthService;
@@ -10,7 +13,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.Optional;
 
-@CrossOrigin(origins = "*")
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
