@@ -47,4 +47,12 @@ public class DoctorController {
                     .body(e.getMessage());
         }
     }
+
+    @GetMapping("/search")
+    public ResponseEntity<List<Doctor>> searchDoctors(
+            @RequestParam(required = false) String name,
+            @RequestParam(required = false) Long id) {
+        List<Doctor> doctors = doctorService.searchDoctors(name, id);
+        return ResponseEntity.ok(doctors);
+    }
 }

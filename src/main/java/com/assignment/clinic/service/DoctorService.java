@@ -81,4 +81,18 @@ public class DoctorService {
 
         return doctorRepository.save(newDoctor);
     }
+
+    @Transactional(readOnly = true)
+    public List<Doctor> searchDoctors(String name, Long specialtyId) {
+        if (name != null && !name.trim().isEmpty() && specialtyId != null) {
+            return doctorRepository.findByFullNameContainingIgnoreCaseAndSpecialties_Id(name, specialtyId);
+        } else if (name != null && !name.trim().isEmpty()) {
+            return doctorRepository.findByFullNameContainingIgnoreCase(name);
+        } else if (specialtyId != null) {
+            return doctorRepository.findBySpecialties_Id(specialtyId);
+        } else {
+            return doctorRepository.findAll();
+        }
+    }
+
 }
