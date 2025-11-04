@@ -1,13 +1,18 @@
 package com.assignment.clinic.controller;
 
 import com.assignment.clinic.dto.DoctorDTO;
+import com.assignment.clinic.dto.DoctorDetailDTO;
 import com.assignment.clinic.dto.DoctorRegistrationRequest;
+import com.assignment.clinic.dto.DoctorSearchDTO;
 import com.assignment.clinic.entity.Doctor;
 import com.assignment.clinic.service.DoctorService;
 import jakarta.validation.Valid;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.http.ResponseEntity;
+
+import java.time.LocalDate;
 import java.util.List;
 
 @RestController
@@ -21,12 +26,49 @@ public class DoctorController {
         this.doctorService = doctorService;
     }
 
+    /**
+     * API 1: Get all doctors
+     * GET /api/doctors
+     */
     @GetMapping
     public ResponseEntity<List<DoctorDTO>> getAllDoctors() {
         // Gọi Service và nhận về List<DoctorDTO>
         List<DoctorDTO> doctors = doctorService.getAllDoctors();
-
         return ResponseEntity.ok(doctors);
+    }
+
+    /**
+     * API 2: Search doctors with availability
+     * GET /api/doctors/search?specialty={specialtyId}&name={name}&date={date}
+     * 
+     * Params:
+     * - specialty (optional): ID chuyên khoa
+     * - name (optional): Tên bác sĩ
+     * - date (required): Ngày cần tìm (format: yyyy-MM-dd)
+     */
+    @GetMapping("/search")
+    public ResponseEntity<List<DoctorSearchDTO>> searchDoctorsWithAvailability(
+            @RequestParam(required = false) Long specialty,
+            @RequestParam(required = false) String name,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
+        
+        List<DoctorSearchDTO> doctors = doctorService.searchDoctorsWithAvailability(specialty, name, date);
+        return ResponseEntity.ok(doctors);
+    }
+
+    /**
+     * API 3: Get doctor detail for appointment booking
+     * GET /api/doctors/{id}/detail
+     * 
+     * Trả về:
+     * - Thông tin bác sĩ
+     * - Các ngày có lịch trong 7 ngày tới
+     * - Time slots theo từng ngày
+     */
+    @GetMapping("/{id}/detail")
+    public ResponseEntity<DoctorDetailDTO> getDoctorDetailForAppointment(@PathVariable Long id) {
+        DoctorDetailDTO detail = doctorService.getDoctorDetailForAppointment(id);
+        return ResponseEntity.ok(detail);
     }
 
     @PostMapping
@@ -46,13 +88,5 @@ public class DoctorController {
                     .status(HttpStatus.BAD_REQUEST)
                     .body(e.getMessage());
         }
-    }
-
-    @GetMapping("/search")
-    public ResponseEntity<List<Doctor>> searchDoctors(
-            @RequestParam(required = false) String name,
-            @RequestParam(required = false) Long id) {
-        List<Doctor> doctors = doctorService.searchDoctors(name, id);
-        return ResponseEntity.ok(doctors);
     }
 }

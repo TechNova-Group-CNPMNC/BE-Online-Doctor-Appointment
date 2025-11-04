@@ -7,6 +7,11 @@ import lombok.AllArgsConstructor;
 import java.time.Instant;
 import java.time.LocalDateTime;
 
+/**
+ * Bảng lưu các slot chi tiết (30 phút mỗi slot)
+ * Được tự động tạo từ AvailabilityBlock
+ * Ví dụ: Block 08:00-12:00 -> Tạo 8 slots: 08:00-08:30, 08:30-09:00, ...
+ */
 @Entity
 @Table(name = "time_slots")
 @Data
@@ -21,6 +26,10 @@ public class TimeSlot {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "availability_block_id", nullable = false)
+    private AvailabilityBlock availabilityBlock;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "doctor_id", nullable = false)

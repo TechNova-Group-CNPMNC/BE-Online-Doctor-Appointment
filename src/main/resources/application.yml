@@ -1,22 +1,46 @@
+# ========================================
+# APPLICATION CONFIGURATION
+# All sensitive values are loaded from .env file
+# See .env.example for required environment variables
+# ========================================
+
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5432/clinic
-    username: postgres
-    password: admin
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:clinic}
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+  
   jpa:
+    defer-datasource-initialization: true
     hibernate:
-      ddl-auto: update
+      ddl-auto: ${HIBERNATE_DDL_AUTO:update}
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+    show-sql: ${SHOW_SQL:true}
+  
   profiles:
-    active: dev
+    active: ${SPRING_PROFILES_ACTIVE:dev}
+  
   sql:
     init:
-      mode: always
-server:
-  port: 8000
+      mode: ${SQL_INIT_MODE:always}
 
+server:
+  port: ${SERVER_PORT:8000}
+
+# Logging Configuration
+logging:
+  level:
+    org.hibernate.SQL: ${LOG_LEVEL_SQL:DEBUG}
+    org.hibernate.type.descriptor.sql.BasicBinder: ${LOG_LEVEL_BINDER:TRACE}
+    org.springframework.data.jpa: ${LOG_LEVEL_JPA:DEBUG}
+    org.springframework.security: ${LOG_LEVEL_SECURITY:DEBUG}
+    com.assignment.clinic: ${LOG_LEVEL_APP:DEBUG}
+
+# JWT Configuration
 jwt:
-  secret: 413F4428472B4B6250655368566D5970337336763979244226452948404D6351
-  expiration: 3600000 # 1 hour in milliseconds
+  secret: ${JWT_SECRET}
+  expiration: ${JWT_EXPIRATION:3600000}

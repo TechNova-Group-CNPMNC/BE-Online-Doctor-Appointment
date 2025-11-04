@@ -1,0 +1,949 @@
+{
+	"info": {
+		"_postman_id": "clinic-api-collection-2025",
+		"name": "Online Doctor Appointment API",
+		"description": "Complete API collection for Online Doctor Appointment System with JWT Authentication.\n\n## 🔐 Authentication\n- Most endpoints require JWT token\n- Get token by calling `/api/auth/login` or `/api/auth/register`\n- Token is automatically saved to environment variable `{{token}}`\n\n## 📋 Setup\n1. Import this collection\n2. Create environment with variable `base_url` = `http://localhost:8000`\n3. Run `/api/auth/login` to get token\n4. Test other endpoints\n\n## 🏥 Endpoints\n- **Auth**: Register, Login\n- **Specialties**: Get all specialties\n- **Doctors**: Search, Get details, Create availability\n- **Appointments**: Create appointment\n- **Availability Blocks**: CRUD operations",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "🔐 Authentication",
+			"item": [
+				{
+					"name": "Register Patient",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Save token to environment variable",
+									"if (pm.response.code === 200) {",
+									"    var jsonData = pm.response.json();",
+									"    if (jsonData.token) {",
+									"        pm.environment.set(\"token\", jsonData.token);",
+									"        pm.environment.set(\"patient_token\", jsonData.token);",
+									"        console.log(\"✅ Token saved: \" + jsonData.token.substring(0, 20) + \"...\");",
+									"    }",
+									"}",
+									"",
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response has token\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.token).to.exist;",
+									"    pm.expect(jsonData.role).to.eql(\"PATIENT\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"patient@test.com\",\n  \"password\": \"password123\",\n  \"fullName\": \"Nguyen Van A\",\n  \"dateOfBirth\": \"1990-01-15\",\n  \"gender\": \"MALE\",\n  \"phoneNumber\": \"0912345678\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/auth/register",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"register"
+							]
+						},
+						"description": "Register a new patient account.\n\n**Request Body:**\n- `email`: Email address (unique)\n- `password`: Password (will be encrypted)\n- `fullName`: Patient's full name\n- `dateOfBirth`: Format YYYY-MM-DD\n- `gender`: MALE, FEMALE, or OTHER\n- `phoneNumber`: Contact number\n\n**Response:**\n- `token`: JWT token for authentication\n- `role`: PATIENT\n- `email`: Registered email"
+					},
+					"response": []
+				},
+				{
+					"name": "Login",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Save token to environment variable",
+									"if (pm.response.code === 200) {",
+									"    var jsonData = pm.response.json();",
+									"    if (jsonData.token) {",
+									"        pm.environment.set(\"token\", jsonData.token);",
+									"        console.log(\"✅ Token saved: \" + jsonData.token.substring(0, 20) + \"...\");",
+									"    }",
+									"    if (jsonData.role === \"PATIENT\") {",
+									"        pm.environment.set(\"patient_token\", jsonData.token);",
+									"    } else if (jsonData.role === \"DOCTOR\") {",
+									"        pm.environment.set(\"doctor_token\", jsonData.token);",
+									"    }",
+									"}",
+									"",
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response has token\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.token).to.exist;",
+									"    pm.expect(jsonData.message).to.eql(\"Login successful\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"patient@test.com\",\n  \"password\": \"password123\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/auth/login",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"login"
+							]
+						},
+						"description": "Login with email and password.\n\n**Request Body:**\n- `email`: Registered email\n- `password`: Account password\n\n**Response:**\n- `token`: JWT token (expires in 24 hours)\n- `role`: PATIENT, DOCTOR, or ADMIN\n- `email`: User email\n- `message`: Login successful"
+					},
+					"response": []
+				},
+				{
+					"name": "Login - Invalid Credentials",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 401\", function () {",
+									"    pm.response.to.have.status(401);",
+									"});",
+									"",
+									"pm.test(\"Response has error message\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.message).to.eql(\"Invalid credentials\");",
+									"    pm.expect(jsonData.token).to.be.null;",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"patient@test.com\",\n  \"password\": \"wrongpassword\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/auth/login",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"login"
+							]
+						},
+						"description": "Test login with invalid credentials (should return 401)."
+					},
+					"response": []
+				}
+			],
+			"description": "Authentication endpoints for user registration and login.\n\n- Register: Create new patient account\n- Login: Authenticate and get JWT token"
+		},
+		{
+			"name": "🏥 Specialties",
+			"item": [
+				{
+					"name": "Get All Specialties",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response is array\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.be.an('array');",
+									"});",
+									"",
+									"pm.test(\"Specialties have required fields\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    if (jsonData.length > 0) {",
+									"        pm.expect(jsonData[0]).to.have.property('id');",
+									"        pm.expect(jsonData[0]).to.have.property('name');",
+									"        pm.expect(jsonData[0]).to.have.property('description');",
+									"    }",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/specialties",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"specialties"
+							]
+						},
+						"description": "Get list of all medical specialties.\n\n**Authentication:** Public (no token required)\n\n**Response:**\n```json\n[\n  {\n    \"id\": 1,\n    \"name\": \"Cardiology\",\n    \"description\": \"Heart and cardiovascular diseases\"\n  },\n  {\n    \"id\": 2,\n    \"name\": \"Dermatology\",\n    \"description\": \"Skin conditions and treatments\"\n  }\n]\n```"
+					},
+					"response": []
+				}
+			],
+			"description": "Medical specialties endpoints.\n\n- Public access (no authentication required)"
+		},
+		{
+			"name": "👨‍⚕️ Doctors",
+			"item": [
+				{
+					"name": "Get All Doctors",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response is array\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.be.an('array');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/doctors",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"doctors"
+							]
+						},
+						"description": "Get list of all doctors.\n\n**Authentication:** Required (any authenticated user)\n\n**Response:**\n- Array of doctor objects with basic information"
+					},
+					"response": []
+				},
+				{
+					"name": "Search Doctors by Specialty",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response is array\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.be.an('array');",
+									"});",
+									"",
+									"pm.test(\"Doctors have availableSlots\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    if (jsonData.length > 0) {",
+									"        pm.expect(jsonData[0]).to.have.property('availableSlots');",
+									"        pm.expect(jsonData[0].availableSlots).to.be.an('array');",
+									"    }",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/doctors/search?specialtyId=1&date=2025-11-05",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"doctors",
+								"search"
+							],
+							"query": [
+								{
+									"key": "specialtyId",
+									"value": "1",
+									"description": "Filter by specialty ID"
+								},
+								{
+									"key": "date",
+									"value": "2025-11-05",
+									"description": "Date to check availability (YYYY-MM-DD)"
+								},
+								{
+									"key": "doctorName",
+									"value": "",
+									"description": "Search by doctor name (optional)",
+									"disabled": true
+								}
+							]
+						},
+						"description": "Search doctors with availability.\n\n**Authentication:** Required\n\n**Query Parameters:**\n- `specialtyId` (optional): Filter by specialty\n- `date` (optional): Date to check availability (default: today + 7 days)\n- `doctorName` (optional): Search by doctor name\n\n**Response:**\n```json\n[\n  {\n    \"doctorId\": 1,\n    \"fullName\": \"Dr. John Smith\",\n    \"specialty\": \"Cardiology\",\n    \"experience\": 15,\n    \"rating\": 4.8,\n    \"availableSlots\": [\n      {\n        \"slotId\": 101,\n        \"startTime\": \"2025-11-05T09:00:00\",\n        \"endTime\": \"2025-11-05T09:30:00\",\n        \"status\": \"AVAILABLE\"\n      }\n    ]\n  }\n]\n```"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Doctor Detail for Appointment",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response has doctor details\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('doctorId');",
+									"    pm.expect(jsonData).to.have.property('fullName');",
+									"    pm.expect(jsonData).to.have.property('timeSlots');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/doctors/1/detail?startDate=2025-11-05&endDate=2025-11-12",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"doctors",
+								"1",
+								"detail"
+							],
+							"query": [
+								{
+									"key": "startDate",
+									"value": "2025-11-05",
+									"description": "Start date (YYYY-MM-DD)"
+								},
+								{
+									"key": "endDate",
+									"value": "2025-11-12",
+									"description": "End date (YYYY-MM-DD)"
+								}
+							]
+						},
+						"description": "Get detailed doctor information with time slots for appointment booking.\n\n**Authentication:** Required\n\n**Path Parameter:**\n- `doctorId`: Doctor ID\n\n**Query Parameters:**\n- `startDate`: Start date (default: today)\n- `endDate`: End date (default: today + 7 days)\n\n**Response:**\n```json\n{\n  \"doctorId\": 1,\n  \"fullName\": \"Dr. John Smith\",\n  \"specialties\": [\"Cardiology\"],\n  \"experience\": 15,\n  \"averageRating\": 4.8,\n  \"bio\": \"Experienced cardiologist...\",\n  \"timeSlots\": [\n    {\n      \"slotId\": 101,\n      \"date\": \"2025-11-05\",\n      \"startTime\": \"09:00\",\n      \"endTime\": \"09:30\",\n      \"status\": \"AVAILABLE\"\n    }\n  ]\n}\n```"
+					},
+					"response": []
+				}
+			],
+			"description": "Doctor-related endpoints.\n\n- Search doctors by specialty and availability\n- Get doctor details for appointment booking"
+		},
+		{
+			"name": "📅 Availability Blocks (Doctor Only)",
+			"item": [
+				{
+					"name": "Create Availability Block",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response has availability block data\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('id');",
+									"    pm.expect(jsonData).to.have.property('workDate');",
+									"    pm.expect(jsonData).to.have.property('generatedSlots');",
+									"});",
+									"",
+									"pm.test(\"Time slots were generated\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.generatedSlots).to.be.above(0);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{doctor_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"workDate\": \"2025-11-10\",\n  \"startTime\": \"08:00\",\n  \"endTime\": \"12:00\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/doctors/1/availability",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"doctors",
+								"1",
+								"availability"
+							]
+						},
+						"description": "Doctor creates a new availability block (work schedule).\n\n**Authentication:** Required (DOCTOR role only)\n\n**Path Parameter:**\n- `doctorId`: Doctor ID\n\n**Request Body:**\n- `workDate`: Date to work (YYYY-MM-DD)\n- `startTime`: Start time (HH:mm)\n- `endTime`: End time (HH:mm)\n\n**Response:**\n```json\n{\n  \"id\": 1,\n  \"doctorId\": 1,\n  \"workDate\": \"2025-11-10\",\n  \"startTime\": \"08:00\",\n  \"endTime\": \"12:00\",\n  \"generatedSlots\": 8,\n  \"createdAt\": \"2025-11-04T10:00:00\"\n}\n```\n\n**Note:** Automatically generates 30-minute time slots (e.g., 08:00-12:00 = 8 slots)"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Availability Blocks by Doctor",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response is array\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.be.an('array');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/doctors/1/availability",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"doctors",
+								"1",
+								"availability"
+							]
+						},
+						"description": "Get all availability blocks for a doctor.\n\n**Authentication:** Required\n\n**Path Parameter:**\n- `doctorId`: Doctor ID"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Availability Blocks by Date",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response is array\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.be.an('array');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/doctors/1/availability?date=2025-11-10",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"doctors",
+								"1",
+								"availability"
+							],
+							"query": [
+								{
+									"key": "date",
+									"value": "2025-11-10",
+									"description": "Filter by date (YYYY-MM-DD)"
+								}
+							]
+						},
+						"description": "Get availability blocks for a specific date.\n\n**Authentication:** Required\n\n**Path Parameter:**\n- `doctorId`: Doctor ID\n\n**Query Parameter:**\n- `date`: Filter by date (YYYY-MM-DD)"
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Availability Block",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 204\", function () {",
+									"    pm.response.to.have.status(204);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{doctor_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/doctors/1/availability/1",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"doctors",
+								"1",
+								"availability",
+								"1"
+							]
+						},
+						"description": "Delete an availability block.\n\n**Authentication:** Required (DOCTOR role only)\n\n**Path Parameters:**\n- `doctorId`: Doctor ID\n- `blockId`: Availability block ID\n\n**Response:** 204 No Content"
+					},
+					"response": []
+				}
+			],
+			"description": "Availability block management endpoints.\n\n**Doctor Only:**\n- Create work schedule blocks\n- View and delete availability blocks\n- System auto-generates 30-minute time slots"
+		},
+		{
+			"name": "📋 Appointments",
+			"item": [
+				{
+					"name": "Create Appointment (Patient)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"pm.test(\"Appointment created successfully\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('appointmentId');",
+									"    pm.expect(jsonData).to.have.property('patientName');",
+									"    pm.expect(jsonData).to.have.property('doctorName');",
+									"    pm.expect(jsonData.status).to.eql('SCHEDULED');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{patient_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"patientId\": 1,\n  \"doctorId\": 1,\n  \"timeSlotId\": 101,\n  \"reason\": \"Routine checkup and consultation\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/appointments",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"appointments"
+							]
+						},
+						"description": "Patient creates a new appointment.\n\n**Authentication:** Required (PATIENT role only)\n\n**Request Body:**\n- `patientId`: Patient ID\n- `doctorId`: Doctor ID\n- `timeSlotId`: Selected time slot ID\n- `reason`: Reason for appointment\n\n**Validations:**\n- Patient must exist\n- Doctor must exist\n- Time slot must exist and be AVAILABLE\n- Time slot will be marked as BOOKED after creation\n\n**Response:**\n```json\n{\n  \"appointmentId\": 1,\n  \"patientName\": \"Nguyen Van A\",\n  \"doctorName\": \"Dr. John Smith\",\n  \"appointmentTime\": \"2025-11-05T09:00:00\",\n  \"status\": \"SCHEDULED\",\n  \"reason\": \"Routine checkup and consultation\"\n}\n```"
+					},
+					"response": []
+				},
+				{
+					"name": "Create Appointment - Invalid TimeSlot",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 400\", function () {",
+									"    pm.response.to.have.status(400);",
+									"});",
+									"",
+									"pm.test(\"Error message returned\", function () {",
+									"    var responseText = pm.response.text();",
+									"    pm.expect(responseText).to.include(\"not available\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{patient_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"patientId\": 1,\n  \"doctorId\": 1,\n  \"timeSlotId\": 999999,\n  \"reason\": \"Test invalid slot\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/appointments",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"appointments"
+							]
+						},
+						"description": "Test appointment creation with invalid/unavailable time slot.\n\n**Expected:** 400 Bad Request with error message"
+					},
+					"response": []
+				}
+			],
+			"description": "Appointment management endpoints.\n\n**Patient Only:**\n- Create new appointments\n- Select available time slots\n- View appointment history"
+		},
+		{
+			"name": "🧪 Test - Without Token",
+			"item": [
+				{
+					"name": "Search Doctors WITHOUT Token",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 403\", function () {",
+									"    pm.response.to.have.status(403);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/doctors/search?specialtyId=1",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"doctors",
+								"search"
+							],
+							"query": [
+								{
+									"key": "specialtyId",
+									"value": "1"
+								}
+							]
+						},
+						"description": "Test protected endpoint without authentication token.\n\n**Expected:** 403 Forbidden"
+					},
+					"response": []
+				},
+				{
+					"name": "Create Appointment WITHOUT Token",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 403\", function () {",
+									"    pm.response.to.have.status(403);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"patientId\": 1,\n  \"doctorId\": 1,\n  \"timeSlotId\": 101,\n  \"reason\": \"Test without token\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/appointments",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"appointments"
+							]
+						},
+						"description": "Test appointment creation without authentication token.\n\n**Expected:** 403 Forbidden"
+					},
+					"response": []
+				},
+				{
+					"name": "Create Availability Block with Patient Token",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 403\", function () {",
+									"    pm.response.to.have.status(403);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{patient_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"workDate\": \"2025-11-10\",\n  \"startTime\": \"08:00\",\n  \"endTime\": \"12:00\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/doctors/1/availability",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"doctors",
+								"1",
+								"availability"
+							]
+						},
+						"description": "Test role-based access control.\n\nPatient trying to access DOCTOR-only endpoint.\n\n**Expected:** 403 Forbidden (Access Denied)"
+					},
+					"response": []
+				}
+			],
+			"description": "Security test cases.\n\n- Test endpoints without authentication\n- Test role-based access control\n- Verify JWT protection is working"
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:8000",
+			"type": "string"
+		},
+		{
+			"key": "token",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "patient_token",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "doctor_token",
+			"value": "",
+			"type": "string"
+		}
+	]
+}
