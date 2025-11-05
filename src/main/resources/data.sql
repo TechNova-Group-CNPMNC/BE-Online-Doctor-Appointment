@@ -141,8 +141,15 @@ INSERT INTO time_slots (availability_block_id, doctor_id, start_time, end_time, 
 (5, 5, (CURRENT_DATE + INTERVAL '4 days') + TIME '10:00:00', (CURRENT_DATE + INTERVAL '4 days') + TIME '10:30:00', 'AVAILABLE', NOW()),
 (5, 5, (CURRENT_DATE + INTERVAL '4 days') + TIME '10:30:00', (CURRENT_DATE + INTERVAL '4 days') + TIME '11:00:00', 'AVAILABLE', NOW());
 
+
+-- Fix TEXT column types (convert from oid to TEXT)
+ALTER TABLE appointments ALTER COLUMN symptoms TYPE TEXT;
+ALTER TABLE appointments ALTER COLUMN suspected_disease TYPE TEXT;
+ALTER TABLE ratings ALTER COLUMN feedback_text TYPE TEXT;
+ALTER TABLE doctors ALTER COLUMN bio TYPE TEXT;
+
 -- ========================================
--- 8. APPOINTMENTS (5 records) - SINGLE ROW TO AVOID TEXT PARSING ISSUES
+-- 8. APPOINTMENTS (5 records)
 -- ========================================
 INSERT INTO appointments (patient_id, doctor_id, time_slot_id, symptoms, suspected_disease, status, reschedule_count, reminder_sent, created_at) VALUES (1, 1, 3, 'Chest pain and shortness of breath', 'Possible angina', 'PENDING', 0, false, NOW());
 INSERT INTO appointments (patient_id, doctor_id, time_slot_id, symptoms, suspected_disease, status, reschedule_count, reminder_sent, created_at) VALUES (2, 2, 12, 'Skin rash and itching on arms', 'Eczema or allergic reaction', 'PENDING', 0, false, NOW());
@@ -151,10 +158,10 @@ INSERT INTO appointments (patient_id, doctor_id, time_slot_id, symptoms, suspect
 INSERT INTO appointments (patient_id, doctor_id, time_slot_id, symptoms, suspected_disease, status, reschedule_count, reminder_sent, created_at) VALUES (5, 5, 35, 'Knee pain after sports injury', 'Ligament strain', 'PENDING', 0, false, NOW());
 
 -- ========================================
--- 9. RATINGS (5 records) - SINGLE ROW TO AVOID TEXT PARSING ISSUES
+-- 9. RATINGS (5 records) - ONE RATING PER APPOINTMENT
 -- ========================================
-INSERT INTO ratings (appointment_id, patient_id, doctor_id, stars, feedback_text, created_at) VALUES (4, 4, 4, 5, 'Dr. Lee was very professional and thorough. Highly recommended!', NOW() - INTERVAL '5 days');
-INSERT INTO ratings (appointment_id, patient_id, doctor_id, stars, feedback_text, created_at) VALUES (4, 4, 4, 4, 'Good consultation, but waiting time was a bit long.', NOW() - INTERVAL '4 days');
-INSERT INTO ratings (appointment_id, patient_id, doctor_id, stars, feedback_text, created_at) VALUES (4, 4, 4, 5, 'Excellent doctor! Very knowledgeable and caring.', NOW() - INTERVAL '3 days');
+INSERT INTO ratings (appointment_id, patient_id, doctor_id, stars, feedback_text, created_at) VALUES (1, 1, 1, 5, 'Dr. Smith was very professional and thorough. Highly recommended!', NOW() - INTERVAL '5 days');
+INSERT INTO ratings (appointment_id, patient_id, doctor_id, stars, feedback_text, created_at) VALUES (2, 2, 2, 4, 'Good consultation, but waiting time was a bit long.', NOW() - INTERVAL '4 days');
+INSERT INTO ratings (appointment_id, patient_id, doctor_id, stars, feedback_text, created_at) VALUES (3, 3, 3, 5, 'Excellent doctor! Very knowledgeable and caring.', NOW() - INTERVAL '3 days');
 INSERT INTO ratings (appointment_id, patient_id, doctor_id, stars, feedback_text, created_at) VALUES (4, 4, 4, 4, 'Dr. Lee listened to all my concerns and provided detailed answers.', NOW() - INTERVAL '2 days');
-INSERT INTO ratings (appointment_id, patient_id, doctor_id, stars, feedback_text, created_at) VALUES (4, 4, 4, 5, 'Best neurologist I have ever consulted. Professional and empathetic.', NOW() - INTERVAL '1 day');
+INSERT INTO ratings (appointment_id, patient_id, doctor_id, stars, feedback_text, created_at) VALUES (5, 5, 5, 5, 'Best orthopedist I have ever consulted. Professional and empathetic.', NOW() - INTERVAL '1 day');
