@@ -32,6 +32,19 @@ public class JwtUtil {
         return createToken(claims, id.toString());
     }
 
+    public String generateToken(Long userId, String role, Long doctorId, Long patientId) {
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("id", userId);
+        claims.put("role", role);
+        if (doctorId != null) {
+            claims.put("doctorId", doctorId);
+        }
+        if (patientId != null) {
+            claims.put("patientId", patientId);
+        }
+        return createToken(claims, userId.toString());
+    }
+
     private String createToken(Map<String, Object> claims, String subject) {
         return Jwts.builder()
                 .setClaims(claims)

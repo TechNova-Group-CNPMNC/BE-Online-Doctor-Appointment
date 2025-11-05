@@ -12,12 +12,23 @@ public class AuthResponse {
     private String role;
     private String message;
     private String token;
+    private Long doctorId;  // ID của doctor nếu user là DOCTOR
+    private Long patientId; // ID của patient nếu user là PATIENT
 
     public AuthResponse(String email, String role, String message, String token) {
         this.email = email;
         this.role = role;
         this.message = message;
         this.token = token;
+    }
+
+    public AuthResponse(String email, String role, String message, String token, Long doctorId, Long patientId) {
+        this.email = email;
+        this.role = role;
+        this.message = message;
+        this.token = token;
+        this.doctorId = doctorId;
+        this.patientId = patientId;
     }
 
     // Getters
@@ -35,6 +46,14 @@ public class AuthResponse {
 
     public String getToken() {
         return token;
+    }
+
+    public Long getDoctorId() {
+        return doctorId;
+    }
+
+    public Long getPatientId() {
+        return patientId;
     }
 
     @Data
