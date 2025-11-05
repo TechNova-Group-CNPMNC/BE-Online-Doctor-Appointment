@@ -51,8 +51,8 @@ INSERT INTO users (email, password_hash, role, created_at, updated_at) VALUES
 ('dr.smith@hospital.com', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhCy', 'DOCTOR', NOW(), NOW()),
 ('dr.nguyen@hospital.com', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhCy', 'DOCTOR', NOW(), NOW()),
 ('dr.patel@hospital.com', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhCy', 'DOCTOR', NOW(), NOW()),
-('dr.lee@hospital.com', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhCy', 'DOCTOR', NOW(), NOW()),
-('dr.wilson@hospital.com', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhCy', 'DOCTOR', NOW(), NOW());
+('dr.lee@hospital.com', '$2a$10$DHAdF4kjrqrD1DhbDSpHvujrgFhVPWQiw6cT/DHpqurfQgtdZplwW', 'DOCTOR', NOW(), NOW()),
+('dr.wilson@hospital.com', '$2a$10$DHAdF4kjrqrD1DhbDSpHvujrgFhVPWQiw6cT/DHpqurfQgtdZplwW', 'DOCTOR', NOW(), NOW());
 
 -- ========================================
 -- 3. PATIENTS (5 records)
@@ -165,3 +165,5 @@ INSERT INTO ratings (appointment_id, patient_id, doctor_id, stars, feedback_text
 INSERT INTO ratings (appointment_id, patient_id, doctor_id, stars, feedback_text, created_at) VALUES (3, 3, 3, 5, 'Excellent doctor! Very knowledgeable and caring.', NOW() - INTERVAL '3 days');
 INSERT INTO ratings (appointment_id, patient_id, doctor_id, stars, feedback_text, created_at) VALUES (4, 4, 4, 4, 'Dr. Lee listened to all my concerns and provided detailed answers.', NOW() - INTERVAL '2 days');
 INSERT INTO ratings (appointment_id, patient_id, doctor_id, stars, feedback_text, created_at) VALUES (5, 5, 5, 5, 'Best orthopedist I have ever consulted. Professional and empathetic.', NOW() - INTERVAL '1 day');
+
+-- ========================================
