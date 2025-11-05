@@ -12,6 +12,8 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfiguration;
+import java.util.Arrays;
 
 @Configuration
 @EnableWebSecurity
@@ -23,25 +25,33 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                .csrf(csrf -> csrf.disable())
+            .cors(cors -> cors.configurationSource(request -> {
+                CorsConfiguration config = new CorsConfiguration();
+                config.setAllowedOrigins(Arrays.asList("http://localhost:5173", "http://localhost:3000"));
+                config.setAllowedMethods(Arrays.asList("*"));
+                config.setAllowedHeaders(Arrays.asList("*"));
+                config.setAllowCredentials(true);
+                return config;
+            }))
+            .csrf(csrf -> csrf.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         // Public endpoints - không cần authentication
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/specialties/**").permitAll()
-                        
+
                         // Doctor endpoints - chỉ DOCTOR có quyền
                         .requestMatchers("/api/doctors/*/availability").hasRole("DOCTOR")
-                        
+
                         // Appointment endpoints - phân quyền theo method
                         .requestMatchers(HttpMethod.POST, "/api/appointments").hasRole("PATIENT")
                         .requestMatchers(HttpMethod.GET, "/api/appointments/**").authenticated()
                         .requestMatchers(HttpMethod.PUT, "/api/appointments/**").authenticated()
-                        
+
                         // Search doctors - cho phép tất cả users đã authenticate
                         .requestMatchers(HttpMethod.GET, "/api/doctors/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/doctors/**").permitAll()
-                        
+
                         // Tất cả request khác cần authentication
                         .anyRequest().authenticated()
                 )
