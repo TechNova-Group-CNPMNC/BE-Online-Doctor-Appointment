@@ -1,15 +1,25 @@
 -- ========================================
--- CLEAR EXISTING DATA (Optional - chỉ dùng khi development)
+-- CLEAR EXISTING DATA AND RESET SEQUENCES
 -- ========================================
--- TRUNCATE TABLE ratings CASCADE;
--- TRUNCATE TABLE appointments CASCADE;
--- TRUNCATE TABLE time_slots CASCADE;
--- TRUNCATE TABLE availability_blocks CASCADE;
--- TRUNCATE TABLE doctor_specialties CASCADE;
--- TRUNCATE TABLE doctors CASCADE;
--- TRUNCATE TABLE patients CASCADE;
--- TRUNCATE TABLE specialties CASCADE;
--- TRUNCATE TABLE users CASCADE;
+TRUNCATE TABLE ratings CASCADE;
+TRUNCATE TABLE appointments CASCADE;
+TRUNCATE TABLE time_slots CASCADE;
+TRUNCATE TABLE availability_blocks CASCADE;
+TRUNCATE TABLE doctor_specialties CASCADE;
+TRUNCATE TABLE doctors CASCADE;
+TRUNCATE TABLE patients CASCADE;
+TRUNCATE TABLE specialties CASCADE;
+TRUNCATE TABLE users CASCADE;
+
+-- Reset sequences to start from 1
+ALTER SEQUENCE IF EXISTS users_id_seq RESTART WITH 1;
+ALTER SEQUENCE IF EXISTS doctors_id_seq RESTART WITH 1;
+ALTER SEQUENCE IF EXISTS patients_id_seq RESTART WITH 1;
+ALTER SEQUENCE IF EXISTS specialties_id_seq RESTART WITH 1;
+ALTER SEQUENCE IF EXISTS availability_blocks_id_seq RESTART WITH 1;
+ALTER SEQUENCE IF EXISTS time_slots_id_seq RESTART WITH 1;
+ALTER SEQUENCE IF EXISTS appointments_id_seq RESTART WITH 1;
+ALTER SEQUENCE IF EXISTS ratings_id_seq RESTART WITH 1;
 
 -- ========================================
 -- 1. INSERT SPECIALTIES
