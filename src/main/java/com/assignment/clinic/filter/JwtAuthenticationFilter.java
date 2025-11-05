@@ -23,10 +23,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private JwtUtil jwtUtil;
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request, 
-                                    HttpServletResponse response, 
+    protected void doFilterInternal(HttpServletRequest request,
+                                    HttpServletResponse response,
                                     FilterChain filterChain) throws ServletException, IOException {
-        
+
         // Lấy token từ header Authorization
         String authHeader = request.getHeader("Authorization");
         String token = null;
@@ -50,16 +50,16 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 if (jwtUtil.validateToken(token, Long.parseLong(userId))) {
                     // Lấy role từ token
                     String role = jwtUtil.extractClaim(token, claims -> claims.get("role", String.class));
-                    
+
                     // Tạo authentication object
                     UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
                         userId,
                         null,
                         Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + role))
                     );
-                    
+
                     authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                    
+
                     // Set vào SecurityContext
                     SecurityContextHolder.getContext().setAuthentication(authToken);
                 }
