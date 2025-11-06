@@ -33,12 +33,10 @@ public class Appointment {
     @JoinColumn(name = "time_slot_id", nullable = false, unique = true)
     private TimeSlot timeSlot;
 
-    @Lob
-    @Column(name = "symptoms", nullable = false)
+    @Column(name = "symptoms", nullable = false, columnDefinition = "TEXT")
     private String symptoms;
 
-    @Lob
-    @Column(name = "suspected_disease")
+    @Column(name = "suspected_disease", columnDefinition = "TEXT")
     private String suspectedDisease;
 
     @Enumerated(EnumType.STRING)

@@ -456,34 +456,40 @@
     "patientId": 1,
     "doctorId": 2,
     "timeSlotId": 101,
-    "reason": "Routine checkup and consultation"
+    "symptoms": "Đau đầu, chóng mặt",
+    "suspectedDisease": "Migraine"
   }
   ```
 - **Validation:**
   - `patientId`: Bắt buộc
   - `doctorId`: Bắt buộc
   - `timeSlotId`: Bắt buộc
-  - `reason`: Bắt buộc
+  - `symptoms`: Khuyến nghị (có thể rút gọn)
 - **Logic:**
   - **Kiểm tra patient tồn tại:** Throw exception nếu không tìm thấy
   - **Kiểm tra doctor tồn tại:** Throw exception nếu không tìm thấy
   - **Kiểm tra timeSlot tồn tại:** Throw exception nếu không tìm thấy
   - **Kiểm tra timeSlot.status = AVAILABLE:** 
-    - Nếu BOOKED → Throw "TimeSlot is not available"
+    - Nếu BOOKED → Throw "Time slot is not available"
   - **Kiểm tra timeSlot thuộc về doctor đúng:**
-    - Nếu sai doctor → Throw "TimeSlot does not belong to this doctor"
-  - Tạo Appointment với status = SCHEDULED
+    - Nếu sai doctor → Throw "Time slot does not belong to the specified doctor"
+  - Tạo Appointment với status = PENDING
   - **Cập nhật timeSlot.status = BOOKED**
   - Lưu appointment vào database
 - **Response (201 Created):**
   ```json
   {
-    "appointmentId": 1,
+    "id": 1,
+    "patientId": 1,
     "patientName": "Nguyễn Văn A",
+    "doctorId": 2,
     "doctorName": "Dr. John Smith",
-    "appointmentTime": "2025-11-05T09:00:00",
-    "status": "SCHEDULED",
-    "reason": "Routine checkup and consultation"
+    "timeSlotId": 101,
+    "startTime": "2025-11-05T09:00:00",
+    "endTime": "2025-11-05T09:30:00",
+    "symptoms": "Đau đầu, chóng mặt",
+    "suspectedDisease": "Migraine",
+    "status": "PENDING"
   }
   ```
 - **Error Response (400 Bad Request):**
@@ -498,6 +504,252 @@
     "error": "Forbidden",
     "message": "Access Denied"
   }
+  ```
+
+### 2. Delete Appointment (Cancel Appointment)
+- **Endpoint:** `DELETE /api/appointments/{appointmentId}`
+- **Mô tả:** Bệnh nhân hủy cuộc hẹn đã đặt
+- **Authentication:** ✅ Required
+- **Authorization:** 🔒 PATIENT role only (chỉ được hủy appointment của chính mình)
+- **Path Parameters:**
+  - `appointmentId` (required): ID của appointment cần hủy
+- **Business Rules:**
+  - ⏰ **Chỉ được hủy trước 48h** - Nếu còn < 48h sẽ bị reject
+  - ❌ Không thể hủy appointment đã CANCELED hoặc COMPLETED
+  - ✅ Khi hủy thành công, time slot sẽ được giải phóng (BOOKED → AVAILABLE)
+- **Logic:**
+  1. Tìm appointment theo ID
+  2. Kiểm tra authorization (chỉ patient tạo appointment mới được hủy)
+  3. Kiểm tra status (không được CANCELED/COMPLETED)
+  4. **Kiểm tra thời gian:** Tính số giờ từ hiện tại đến appointment time
+     - Nếu < 48h → Throw error "Cannot cancel appointment. Must cancel at least 48 hours in advance"
+  5. Cập nhật appointment.status = CANCELED
+  6. Giải phóng time slot: timeSlot.status = AVAILABLE
+- **Response (200 OK):**
+  ```json
+  "Appointment canceled successfully. Time slot is now available for other patients."
+  ```
+- **Error Response (400 Bad Request) - Quá gần thời gian hẹn:**
+  ```json
+  "Cannot cancel appointment. Must cancel at least 48 hours in advance. Only 36 hours remaining."
+  ```
+- **Error Response (400 Bad Request) - Đã canceled:**
+  ```json
+  "Appointment is already canceled"
+  ```
+- **Error Response (403 Forbidden) - Không phải appointment của mình:**
+  ```json
+  "You can only cancel your own appointments"
+  ```
+
+### 3. Update Appointment (Change Appointment Information)
+- **Endpoint:** `PUT /api/appointments/{appointmentId}`
+- **Mô tả:** Cập nhật thông tin cuộc hẹn (triệu chứng hoặc đổi lịch)
+- **Authentication:** ✅ Required
+- **Authorization:** 🔒 PATIENT role only (chỉ được update appointment của chính mình)
+- **Path Parameters:**
+  - `appointmentId` (required): ID của appointment cần update
+- **Request Body (JSON):**
+  ```json
+  {
+    "symptoms": "Đau đầu dữ dội, buồn nôn, chóng mặt",
+    "suspectedDisease": "Migraine cấp tính",
+    "newTimeSlotId": 456
+  }
+  ```
+  - **Tất cả fields đều optional** - Chỉ gửi field nào cần update
+- **Business Rules:**
+  
+  **A. Update Symptoms/Suspected Disease:**
+  - ✅ **Không giới hạn thời gian** - Có thể update bất kỳ lúc nào
+  - ✅ **Không giới hạn số lần** - Có thể update nhiều lần
+  
+  **B. Update Time Slot (Reschedule):**
+  - ⏰ **Chỉ được đổi lịch trước 48h** - Nếu còn < 48h sẽ bị reject
+  - 🔢 **Giới hạn tối đa 2 lần đổi lịch** - Lần thứ 3 sẽ bị reject
+  - ✅ Time slot mới phải thuộc về cùng bác sĩ
+  - ✅ Time slot mới phải có status = AVAILABLE
+  - ✅ Khi đổi lịch: Old slot → AVAILABLE, New slot → BOOKED
+  
+- **Validation:**
+  - ❌ Không thể update appointment đã CANCELED hoặc COMPLETED
+  - `newTimeSlotId`: Phải tồn tại và có status = AVAILABLE
+  - `newTimeSlotId`: Phải thuộc về cùng doctor với appointment gốc
+- **Logic:**
+  1. Tìm appointment theo ID
+  2. Kiểm tra authorization (chỉ patient tạo appointment mới được update)
+  3. Kiểm tra status (không được CANCELED/COMPLETED)
+  4. **Update symptoms và suspected disease (nếu có trong request):**
+     - Không kiểm tra thời gian
+     - Không kiểm tra số lần
+  5. **Update time slot (nếu có newTimeSlotId trong request):**
+     - 5.1: Kiểm tra thời gian - Phải còn ≥ 48h
+     - 5.2: Kiểm tra reschedule count - Phải < 2
+     - 5.3: Kiểm tra new time slot tồn tại và AVAILABLE
+     - 5.4: Kiểm tra new time slot thuộc về cùng doctor
+     - 5.5: Giải phóng old time slot (BOOKED → AVAILABLE)
+     - 5.6: Book new time slot (AVAILABLE → BOOKED)
+     - 5.7: Cập nhật appointment.timeSlot = newTimeSlot
+     - 5.8: Tăng appointment.rescheduleCount += 1
+  6. Lưu appointment đã update
+- **Response (200 OK) - Update symptoms only:**
+  ```json
+  {
+    "id": 1,
+    "patientId": 1,
+    "patientName": "Nguyễn Văn A",
+    "doctorId": 2,
+    "doctorName": "Dr. John Smith",
+    "timeSlotId": 101,
+    "startTime": "2025-11-10T09:00:00",
+    "endTime": "2025-11-10T09:30:00",
+    "symptoms": "Đau đầu dữ dội, buồn nôn, chóng mặt",
+    "suspectedDisease": "Migraine cấp tính",
+    "status": "PENDING"
+  }
+  ```
+- **Response (200 OK) - Reschedule (change timeSlot):**
+  ```json
+  {
+    "id": 1,
+    "patientId": 1,
+    "patientName": "Nguyễn Văn A",
+    "doctorId": 2,
+    "doctorName": "Dr. John Smith",
+    "timeSlotId": 456,
+    "startTime": "2025-11-12T14:00:00",
+    "endTime": "2025-11-12T14:30:00",
+    "symptoms": "Đau đầu, chóng mặt",
+    "status": "PENDING"
+  }
+  ```
+- **Error Response (400 Bad Request) - Reschedule quá gần:**
+  ```json
+  "Cannot reschedule appointment. Must reschedule at least 48 hours in advance. Only 30 hours remaining."
+  ```
+- **Error Response (400 Bad Request) - Vượt quá số lần reschedule:**
+  ```json
+  "Cannot reschedule appointment. Maximum 2 reschedules allowed. Current reschedule count: 2"
+  ```
+- **Error Response (400 Bad Request) - Time slot không available:**
+  ```json
+  "New time slot is not available"
+  ```
+- **Error Response (400 Bad Request) - Time slot sai doctor:**
+  ```json
+  "New time slot does not belong to the same doctor"
+  ```
+- **Error Response (403 Forbidden):**
+  ```json
+  "You can only update your own appointments"
+  ```
+
+### 4. Get List of Appointments
+- **Endpoint:** `GET /api/appointments?patientId={patientId}&status={status}`
+- **Mô tả:** Lấy danh sách các cuộc hẹn của patient
+- **Authentication:** ✅ Required
+- **Authorization:** 🔒 PATIENT role only (chỉ được xem appointments của chính mình)
+- **Query Parameters:**
+  - `patientId` (required): ID của patient
+  - `status` (optional): Filter theo trạng thái (PENDING, COMPLETED, CANCELED)
+- **Logic:**
+  1. Kiểm tra authorization (patient chỉ được xem appointments của mình)
+  2. Nếu có `status` parameter:
+     - Parse status string → enum
+     - Query appointments với filter: `findByPatientIdAndStatusOrderByTimeSlotStartTimeDesc`
+  3. Nếu không có `status` parameter:
+     - Query tất cả appointments: `findByPatientIdOrderByTimeSlotStartTimeDesc`
+  4. Convert to response DTOs và return
+- **Response (200 OK) - Không có filter:**
+  ```json
+  [
+    {
+      "id": 3,
+      "patientId": 1,
+      "patientName": "Nguyễn Văn A",
+      "doctorId": 2,
+      "doctorName": "Dr. John Smith",
+      "timeSlotId": 201,
+      "startTime": "2025-11-15T10:00:00",
+      "endTime": "2025-11-15T10:30:00",
+      "symptoms": "Khám định kỳ",
+      "suspectedDisease": null,
+      "status": "PENDING"
+    },
+    {
+      "id": 2,
+      "patientId": 1,
+      "patientName": "Nguyễn Văn A",
+      "doctorId": 1,
+      "doctorName": "Dr. Jane Doe",
+      "timeSlotId": 150,
+      "startTime": "2025-11-08T14:00:00",
+      "endTime": "2025-11-08T14:30:00",
+      "symptoms": "Đau bụng",
+      "suspectedDisease": "Viêm dạ dày",
+      "status": "COMPLETED"
+    },
+    {
+      "id": 1,
+      "patientId": 1,
+      "patientName": "Nguyễn Văn A",
+      "doctorId": 2,
+      "doctorName": "Dr. John Smith",
+      "timeSlotId": 101,
+      "startTime": "2025-11-05T09:00:00",
+      "endTime": "2025-11-05T09:30:00",
+      "symptoms": "Đau đầu",
+      "suspectedDisease": "Migraine",
+      "status": "CANCELED"
+    }
+  ]
+  ```
+- **Response (200 OK) - Có filter status=PENDING:**
+  ```json
+  [
+    {
+      "id": 3,
+      "patientId": 1,
+      "patientName": "Nguyễn Văn A",
+      "doctorId": 2,
+      "doctorName": "Dr. John Smith",
+      "timeSlotId": 201,
+      "startTime": "2025-11-15T10:00:00",
+      "endTime": "2025-11-15T10:30:00",
+      "symptoms": "Khám định kỳ",
+      "suspectedDisease": null,
+      "status": "PENDING"
+    }
+  ]
+  ```
+- **Error Response (400 Bad Request) - Invalid status:**
+  ```json
+  "Invalid status filter. Valid values: PENDING, COMPLETED, CANCELED"
+  ```
+- **Error Response (403 Forbidden) - Không phải appointments của mình:**
+  ```json
+  "You can only view your own appointments"
+  ```
+- **Use Cases:**
+  
+  **Use Case 1: Xem tất cả appointments**
+  ```bash
+  GET /api/appointments?patientId=1
+  ```
+  
+  **Use Case 2: Xem chỉ appointments đang chờ (PENDING)**
+  ```bash
+  GET /api/appointments?patientId=1&status=PENDING
+  ```
+  
+  **Use Case 3: Xem appointments đã hoàn thành**
+  ```bash
+  GET /api/appointments?patientId=1&status=COMPLETED
+  ```
+  
+  **Use Case 4: Xem appointments đã hủy**
+  ```bash
+  GET /api/appointments?patientId=1&status=CANCELED
   ```
 
 ---
@@ -522,7 +774,10 @@ GET    /api/doctors/{id}/availability?date  → Get blocks by date
 
 ### PATIENT Role Only
 ```
-POST   /api/appointments           → Create appointment
+POST   /api/appointments                     → Create appointment
+DELETE /api/appointments/{appointmentId}     → Cancel appointment (must be ≥48h before)
+PUT    /api/appointments/{appointmentId}     → Update appointment (symptoms anytime, reschedule ≥48h, max 2 times)
+GET    /api/appointments?patientId={id}&status={status} → Get appointments list (optional status filter)
 ```
 
 ### DOCTOR Role Only
@@ -544,6 +799,37 @@ DELETE /api/doctors/{id}/availability/{blockId} → Delete block
 5. POST /api/appointments → Book appointment
    → Backend: Check validations → Create appointment → Update slot status to BOOKED
 6. Response: Appointment confirmed
+```
+
+### Appointment Management Flow
+```
+1. Patient Login → JWT Token (PATIENT role)
+
+2. GET /api/appointments?patientId=1 → View all appointments
+   → Or with filter: GET /api/appointments?patientId=1&status=PENDING
+
+3. PUT /api/appointments/5 → Update appointment
+   
+   Option A - Update symptoms only:
+   → Body: { "symptoms": "New symptoms", "suspectedDisease": "New diagnosis" }
+   → No time validation
+   → Update anytime, unlimited times
+   
+   Option B - Reschedule appointment:
+   → Body: { "newTimeSlotId": 456 }
+   → Check: Must be ≥48h before appointment time
+   → Check: rescheduleCount < 2
+   → Old slot → AVAILABLE, New slot → BOOKED
+   → rescheduleCount += 1
+   
+   Option C - Update both:
+   → Body: { "symptoms": "...", "newTimeSlotId": 456 }
+   → Apply both validations
+
+4. DELETE /api/appointments/5 → Cancel appointment
+   → Check: Must be ≥48h before appointment time
+   → Appointment.status → CANCELED
+   → TimeSlot.status → AVAILABLE
 ```
 
 ### Doctor Schedule Management Flow
@@ -632,6 +918,79 @@ DELETE /api/doctors/{id}/availability/{blockId} → Delete block
 4. Check timeSlot.status = AVAILABLE
 5. Check timeSlot belongs to correct doctor
 6. Create appointment + Update slot to BOOKED
+
+### Appointment Cancellation Rules (48h Rule)
+- **Scenario 1:** Appointment at 2025-11-10 10:00
+  - Now: 2025-11-08 09:00 (49h before) → ✅ Can cancel
+  - Now: 2025-11-08 11:00 (47h before) → ❌ Cannot cancel
+  
+- **Validation:** `HOURS.between(now, appointmentTime) >= 48`
+- **On Cancel:**
+  - Appointment.status → CANCELED
+  - TimeSlot.status → AVAILABLE (giải phóng slot cho người khác)
+
+### Appointment Update Rules
+**A. Update Symptoms/Suspected Disease:**
+- ✅ No time limit - Anytime
+- ✅ No count limit - Unlimited times
+- Use case: Patient nhớ thêm triệu chứng, bổ sung thông tin
+
+**B. Reschedule (Change Time Slot):**
+- ⏰ **48h Rule:** Must be ≥48h before appointment time
+- 🔢 **Max 2 Reschedules:** rescheduleCount < 2
+- ✅ New slot must belong to same doctor
+- ✅ New slot must be AVAILABLE
+- **On Reschedule:**
+  - Old TimeSlot.status → AVAILABLE
+  - New TimeSlot.status → BOOKED
+  - Appointment.timeSlot → newTimeSlot
+  - Appointment.rescheduleCount += 1
+
+**Example:**
+```json
+// Reschedule 1st time (OK)
+PUT /api/appointments/1
+Body: { "newTimeSlotId": 200 }
+→ rescheduleCount = 1
+
+// Reschedule 2nd time (OK - Last chance)
+PUT /api/appointments/1
+Body: { "newTimeSlotId": 300 }
+→ rescheduleCount = 2
+
+// Reschedule 3rd time (REJECTED)
+PUT /api/appointments/1
+Body: { "newTimeSlotId": 400 }
+→ Error: "Maximum 2 reschedules allowed"
+```
+
+### Get Appointments - Status Filter
+```bash
+# Get all appointments
+GET /api/appointments?patientId=1
+→ Returns: PENDING, COMPLETED, CANCELED (all statuses)
+
+# Get only pending appointments
+GET /api/appointments?patientId=1&status=PENDING
+→ Returns: Only appointments with status = PENDING
+
+# Get completed appointments
+GET /api/appointments?patientId=1&status=COMPLETED
+→ Returns: Only appointments with status = COMPLETED
+
+# Get canceled appointments
+GET /api/appointments?patientId=1&status=CANCELED
+→ Returns: Only appointments with status = CANCELED
+```
+
+**Status Enum Values:**
+- `PENDING` - Appointment scheduled, waiting for appointment time
+- `COMPLETED` - Appointment finished
+- `CANCELED` - Appointment canceled by patient
+
+**Sort Order:**
+- Ordered by `timeSlot.startTime` DESC (newest first)
+- Recent appointments appear first in list
 
 ---
 

@@ -44,3 +44,12 @@ logging:
 jwt:
   secret: ${JWT_SECRET}
   expiration: ${JWT_EXPIRATION:3600000}
+
+# Google Gemini AI Configuration for AI Chatbot
+gemini:
+  api:
+    key: ${GEMINI_API_KEY:your-gemini-api-key-here}
+    model: ${GEMINI_MODEL:gemini-1.5-flash}
+    url: ${GEMINI_API_URL:https://generativelanguage.googleapis.com/v1beta/models}
+    max-tokens: ${GEMINI_MAX_TOKENS:500}
+    temperature: ${GEMINI_TEMPERATURE:0.7}

@@ -7,6 +7,7 @@ import com.assignment.clinic.repository.PatientRepository;
 import com.assignment.clinic.repository.UserRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.Optional;
@@ -25,10 +26,20 @@ public class AuthService {
         this.patientRepository = patientRepository;
     }
 
+    @Transactional
     public User registerUser(String email, String password, UserRole role, String fullName, LocalDate dateOfBirth, Gender gender, String phoneNumber) {
+        // Kiểm tra email đã tồn tại
         if (userRepository.findByEmail(email).isPresent()) {
             throw new RuntimeException("User with this email already exists");
         }
+        
+        // Kiểm tra phone number đã tồn tại (nếu đăng ký Patient)
+        if (role == UserRole.PATIENT && phoneNumber != null) {
+            if (patientRepository.findByPhoneNumber(phoneNumber).isPresent()) {
+                throw new RuntimeException("Patient with this phone number already exists");
+            }
+        }
+        
         User user = new User(email, passwordEncoder.encode(password), role);
         User savedUser = userRepository.save(user);
 
