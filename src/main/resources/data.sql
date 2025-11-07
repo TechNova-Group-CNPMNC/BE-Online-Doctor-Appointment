@@ -396,3 +396,32 @@ SET average_rating = (
 -- ========================================
 -- END OF SAMPLE DATA
 -- ========================================
+
+-- ========================================
+-- 10. TEST DATA: COMPLETED APPOINTMENT WITHOUT RATING
+-- ========================================
+-- For testing rating feature
+INSERT INTO appointments (patient_id, doctor_id, time_slot_id, symptoms, suspected_disease, status, reschedule_count, reminder_sent, created_at)
+VALUES (
+    1, -- Nguyen Van An
+    2, -- Dr. Nguyen Van Hai
+    (SELECT MIN(id) FROM time_slots WHERE status = 'AVAILABLE' AND doctor_id = 2),
+    'Bị mẩn đỏ và ngứa ở cánh tay, đã 1 tuần chưa hết',
+    'Có thể bị viêm da dị ứng',
+    'COMPLETED',
+    0,
+    true,
+    NOW() - INTERVAL '1 day'
+);
+
+-- Update time slot status
+UPDATE time_slots
+SET status = 'BOOKED'
+WHERE id = (
+    SELECT time_slot_id
+    FROM appointments
+    ORDER BY id DESC
+    LIMIT 1
+);
+
+COMMIT;
