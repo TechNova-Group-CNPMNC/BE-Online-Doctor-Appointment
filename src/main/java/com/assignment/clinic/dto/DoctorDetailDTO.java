@@ -25,4 +25,10 @@ public class DoctorDetailDTO {
     
     // Map: ngày -> danh sách time slots
     private Map<LocalDate, List<TimeSlotDTO>> timeSlotsByDate;
+    
+    // Danh sách ratings của bác sĩ (hiển thị tối đa 10 ratings gần nhất)
+    private List<DoctorRatingDTO> ratings;
+    
+    // Tổng số ratings
+    private Integer totalRatings;
 }

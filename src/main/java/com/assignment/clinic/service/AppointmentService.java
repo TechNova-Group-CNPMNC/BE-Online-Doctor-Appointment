@@ -105,6 +105,13 @@ public class AppointmentService {
         response.setSymptoms(appointment.getSymptoms());
         response.setSuspectedDisease(appointment.getSuspectedDisease());
         response.setStatus(appointment.getStatus().name());
+        
+        // Thêm rating và feedback nếu appointment đã được rating
+        if (appointment.getRating() != null) {
+            response.setRating(appointment.getRating().getStars());
+            response.setFeedback(appointment.getRating().getFeedbackText());
+        }
+        
         return response;
     }
 

@@ -177,7 +177,7 @@
 
 ### 3. Get Doctor Detail (for making appointment)
 - **Endpoint:** `GET /api/doctors/{doctorId}/detail?startDate={startDate}&endDate={endDate}`
-- **Mô tả:** Lấy thông tin chi tiết bác sĩ và các time slots để đặt lịch
+- **Mô tả:** Lấy thông tin chi tiết bác sĩ, các time slots và đánh giá từ bệnh nhân
 - **Authentication:** ✅ Required
 - **Authorization:** Any authenticated user
 - **Path Parameters:**
@@ -190,6 +190,7 @@
   - Lấy tất cả time slots trong khoảng startDate → endDate
   - Chỉ trả về slots có status = AVAILABLE
   - Nhóm slots theo ngày (timeSlotsByDate)
+  - Lấy tối đa 10 ratings gần nhất của bác sĩ
 - **Response (200 OK):**
   ```json
   {
@@ -214,9 +215,29 @@
         "endTime": "10:00",
         "status": "AVAILABLE"
       }
-    ]
+    ],
+    "ratings": [
+      {
+        "ratingId": 15,
+        "patientName": "Nguyễn Văn A",
+        "stars": 5,
+        "feedbackText": "Bác sĩ rất tận tâm và chuyên nghiệp",
+        "createdAt": "2025-11-06T10:00:00Z"
+      },
+      {
+        "ratingId": 14,
+        "patientName": "Trần Thị B",
+        "stars": 4,
+        "feedbackText": "Khám bệnh kỹ lưỡng",
+        "createdAt": "2025-11-05T14:30:00Z"
+      }
+    ],
+    "totalRatings": 25
   }
   ```
+- **Response Fields:**
+  - `ratings`: Danh sách tối đa 10 ratings gần nhất
+  - `totalRatings`: Tổng số ratings của bác sĩ
 - **Error Response (404 Not Found):**
   ```json
   {
@@ -896,6 +917,156 @@
 
 ---
 
+## 🌟 VII. Rating & Comment API
+
+### 1. Create Rating and Comment
+- **Endpoint:** `POST /api/appointments/{appointmentId}/rating`
+- **Mô tả:** Bệnh nhân để lại đánh giá và nhận xét về cuộc hẹn đã hoàn thành
+- **Authentication:** ✅ Required
+- **Authorization:** 🔒 PATIENT role only
+- **Path Parameters:**
+  - `appointmentId` (required): ID của appointment cần đánh giá
+- **Request Body (JSON):**
+  ```json
+  {
+    "stars": 5,
+    "feedbackText": "Bác sĩ rất tận tâm và chuyên nghiệp. Khám bệnh kỹ lưỡng."
+  }
+  ```
+- **Validation:**
+  - `stars`: Bắt buộc, số nguyên từ 1-5
+  - `feedbackText`: Optional (có thể null hoặc rỗng)
+- **Business Rules:**
+  - ✅ Chỉ appointment có status = COMPLETED mới được đánh giá
+  - ✅ Mỗi appointment chỉ được đánh giá 1 lần duy nhất
+  - ✅ Sau khi tạo rating, hệ thống tự động tính lại average_rating của bác sĩ
+- **Logic:**
+  1. Kiểm tra appointment tồn tại
+  2. Kiểm tra appointment đã COMPLETED chưa
+  3. Kiểm tra appointment đã được rating chưa (1 appointment chỉ được rating 1 lần)
+  4. Tạo rating mới với stars và feedbackText
+  5. Tính toán lại average_rating của bác sĩ:
+     - Lấy tất cả ratings của bác sĩ
+     - Tính trung bình cộng số stars
+     - Làm tròn đến 2 chữ số thập phân
+     - Cập nhật vào Doctor.averageRating
+- **Response (201 Created):**
+  ```json
+  {
+    "ratingId": 1,
+    "appointmentId": 10,
+    "patientId": 1,
+    "patientName": "Nguyễn Văn A",
+    "doctorId": 2,
+    "doctorName": "Dr. John Smith",
+    "stars": 5,
+    "feedbackText": "Bác sĩ rất tận tâm và chuyên nghiệp. Khám bệnh kỹ lưỡng.",
+    "createdAt": "2025-11-07T10:00:00Z"
+  }
+  ```
+- **Error Response (400 Bad Request) - Appointment chưa completed:**
+  ```json
+  "Can only rate completed appointments. Current status: PENDING"
+  ```
+- **Error Response (400 Bad Request) - Đã rating rồi:**
+  ```json
+  "This appointment has already been rated"
+  ```
+- **Error Response (400 Bad Request) - Stars không hợp lệ:**
+  ```json
+  {
+    "timestamp": "2025-11-07T10:00:00.000+00:00",
+    "status": 400,
+    "error": "Bad Request",
+    "message": "Stars must be between 1 and 5"
+  }
+  ```
+- **Error Response (404 Not Found):**
+  ```json
+  "Appointment not found with ID: 999"
+  ```
+- **Use Cases:**
+  
+  **Use Case 1: Đánh giá với feedback đầy đủ**
+  ```bash
+  POST /api/appointments/10/rating
+  Body: {
+    "stars": 5,
+    "feedbackText": "Bác sĩ rất tận tâm, khám bệnh kỹ lưỡng"
+  }
+  ```
+  
+  **Use Case 2: Đánh giá chỉ có stars (không có feedback)**
+  ```bash
+  POST /api/appointments/10/rating
+  Body: {
+    "stars": 4
+  }
+  ```
+  
+  **Use Case 3: Đánh giá với feedback ngắn**
+  ```bash
+  POST /api/appointments/10/rating
+  Body: {
+    "stars": 3,
+    "feedbackText": "Tạm ổn"
+  }
+  ```
+
+### 2. Get Appointments with Rating Information
+- **Mô tả:** Khi gọi API `GET /api/appointments`, các appointment đã COMPLETED sẽ có thêm thông tin rating và feedback
+- **Endpoint:** `GET /api/appointments?patientId={patientId}&status={status}`
+- **Response Fields mới:**
+  - `rating`: Số sao (1-5) - chỉ có khi appointment đã được rating
+  - `feedback`: Nhận xét - chỉ có khi appointment đã được rating
+- **Response Example:**
+  ```json
+  [
+    {
+      "id": 10,
+      "patientId": 1,
+      "patientName": "Nguyễn Văn A",
+      "doctorId": 2,
+      "doctorName": "Dr. John Smith",
+      "timeSlotId": 201,
+      "startTime": "2025-11-05T10:00:00",
+      "endTime": "2025-11-05T10:30:00",
+      "symptoms": "Đau đầu",
+      "suspectedDisease": "Migraine",
+      "status": "COMPLETED",
+      "rating": 5,
+      "feedback": "Bác sĩ rất tận tâm và chuyên nghiệp"
+    },
+    {
+      "id": 11,
+      "patientId": 1,
+      "patientName": "Nguyễn Văn A",
+      "doctorId": 3,
+      "doctorName": "Dr. Jane Doe",
+      "timeSlotId": 202,
+      "startTime": "2025-11-10T14:00:00",
+      "endTime": "2025-11-10T14:30:00",
+      "symptoms": "Khám định kỳ",
+      "suspectedDisease": null,
+      "status": "PENDING",
+      "rating": null,
+      "feedback": null
+    }
+  ]
+  ```
+
+---
+
+
+Rating & Comment API
+1. Create rating and comment.
+- Bệnh nhân để lại nhận xét và đánh giá về cuộc hẹn
+- Yêu cầu Patient authenticate
+- params sẽ là appointment id
+- request body: số điểm rating(star) và nhận xét(feedback_text)
+- Sau khi để lại số điểm -> tiến hành tính toán lại average_rating của bác sĩ.
+
+
 ## �🔐 VII. Security & Authorization Summary
 
 ### Public Endpoints (No Authentication)
@@ -922,6 +1093,7 @@ PUT    /api/appointments/{appointmentId}     → Update appointment (symptoms an
 GET    /api/appointments?patientId={id}&status={status} → Get appointments list (optional status filter)
 GET    /api/patients/{patientId}/profile     → Get patient profile
 PUT    /api/patients/{patientId}/profile     → Update patient profile
+POST   /api/appointments/{appointmentId}/rating → Create rating and comment (only for COMPLETED appointments)
 ```
 
 ### DOCTOR Role Only
@@ -932,7 +1104,7 @@ DELETE /api/doctors/{id}/availability/{blockId} → Delete block
 
 ---
 
-## 📊 VII. Data Flow Diagram
+## 📊 IX. Data Flow Diagram
 
 ### Appointment Booking Flow
 ```
@@ -1162,3 +1334,4 @@ GET /api/appointments?patientId=1&status=CANCELED
 **Last Updated:** November 4, 2025  
 **API Version:** 1.0  
 **Base URL:** `http://localhost:8000`
+Đồng thời ở API Get List of Appointments, đối với các appointment đã completed thì hãy lấy thêm rating và feedback. 

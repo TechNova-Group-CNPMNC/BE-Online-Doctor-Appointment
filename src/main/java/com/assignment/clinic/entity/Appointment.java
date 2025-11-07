@@ -51,4 +51,8 @@ public class Appointment {
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt = Instant.now();
+
+    // Relationship với Rating (1 appointment có tối đa 1 rating)
+    @OneToOne(mappedBy = "appointment", fetch = FetchType.LAZY)
+    private Rating rating;
 }
