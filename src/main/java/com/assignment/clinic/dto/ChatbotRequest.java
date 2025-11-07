@@ -10,11 +10,10 @@ import jakarta.validation.constraints.NotBlank;
 @AllArgsConstructor
 public class ChatbotRequest {
     
-    @NotBlank(message = "Symptoms description is required")
+    /**
+     * Mô tả triệu chứng/tình trạng bệnh (REQUIRED)
+     * Ví dụ: "Tôi bị đau đầu dữ dội, chóng mặt và buồn nôn từ 2 ngày nay"
+     */
+    @NotBlank(message = "Vui lòng mô tả triệu chứng của bạn")
     private String symptoms;
-    
-    // Optional: Thông tin bổ sung để AI phân tích tốt hơn
-    private String age;
-    private String gender;
-    private String medicalHistory;
 }

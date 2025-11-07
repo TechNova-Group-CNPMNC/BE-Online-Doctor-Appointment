@@ -7,22 +7,35 @@ import lombok.Builder;
 
 import java.util.List;
 
+/**
+ * Response từ AI phân tích triệu chứng
+ * CHỈ chứa dự đoán bệnh + gợi ý chuyên khoa (KHÔNG có danh sách bác sĩ)
+ */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
 public class ChatbotResponse {
     
-    // AI analysis của triệu chứng
+    /**
+     * Dự đoán bệnh từ AI
+     * Ví dụ: "Có thể bạn đang bị Migraine (đau nửa đầu) hoặc Tension headache (đau đầu do căng thẳng)"
+     */
+    private String diseasePrediction;
+    
+    /**
+     * Phân tích chi tiết triệu chứng từ AI
+     */
     private String analysis;
     
-    // Gợi ý chuyên khoa (có thể nhiều)
+    /**
+     * Gợi ý chuyên khoa phù hợp (có thể nhiều)
+     */
     private List<SpecialtySuggestion> suggestedSpecialties;
     
-    // Gợi ý bác sĩ phù hợp
-    private List<DoctorSuggestion> suggestedDoctors;
-    
-    // Cảnh báo nếu cần cấp cứu
+    /**
+     * Cảnh báo cấp cứu
+     */
     private boolean emergencyWarning;
     private String emergencyMessage;
     
@@ -35,17 +48,5 @@ public class ChatbotResponse {
         private String specialtyName;
         private String reason;
         private Integer confidenceScore; // 0-100
-    }
-    
-    @Data
-    @NoArgsConstructor
-    @AllArgsConstructor
-    @Builder
-    public static class DoctorSuggestion {
-        private Long doctorId;
-        private String doctorName;
-        private String specialty;
-        private Double rating;
-        private Boolean hasAvailableSlots;
     }
 }

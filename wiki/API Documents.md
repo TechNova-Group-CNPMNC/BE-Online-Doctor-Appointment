@@ -754,7 +754,149 @@
 
 ---
 
-## 🔐 VI. Security & Authorization Summary
+## � VI. Patient Profile API
+
+### 1. Get Patient Profile
+- **Endpoint:** `GET /api/patients/{patientId}/profile`
+- **Mô tả:** Xem thông tin cá nhân của bệnh nhân
+- **Authentication:** ✅ Required
+- **Authorization:** 🔒 PATIENT role only (chỉ được xem thông tin của chính mình)
+- **Path Parameters:**
+  - `patientId` (required): ID của bệnh nhân
+- **Logic:**
+  - Kiểm tra patient tồn tại
+  - Kiểm tra authorization (chỉ được xem profile của chính mình)
+  - Trả về thông tin cá nhân bao gồm: email, fullName, dateOfBirth, gender, phoneNumber, address, medicalHistory
+- **Response (200 OK):**
+  ```json
+  {
+    "patientId": 1,
+    "email": "patient@example.com",
+    "fullName": "Nguyễn Văn A",
+    "dateOfBirth": "1990-01-15",
+    "gender": "MALE",
+    "phoneNumber": "0912345678",
+    "address": "123 Nguyễn Huệ, Q1, TP.HCM",
+    "medicalHistory": "Tiền sử dị ứng thuốc kháng sinh, cao huyết áp"
+  }
+  ```
+- **Error Response (404 Not Found):**
+  ```json
+  {
+    "timestamp": "2025-11-07T10:00:00.000+00:00",
+    "status": 404,
+    "error": "Not Found",
+    "message": "Patient not found with ID: 999"
+  }
+  ```
+- **Error Response (403 Forbidden):**
+  ```json
+  {
+    "timestamp": "2025-11-07T10:00:00.000+00:00",
+    "status": 403,
+    "error": "Forbidden",
+    "message": "Access Denied"
+  }
+  ```
+
+### 2. Update Patient Profile (Partial Update)
+- **Endpoint:** `PUT /api/patients/{patientId}/profile`
+- **Mô tả:** Cập nhật thông tin cá nhân của bệnh nhân (partial update - chỉ gửi fields cần update)
+- **Authentication:** ✅ Required
+- **Authorization:** 🔒 PATIENT role only (chỉ được cập nhật thông tin của chính mình)
+- **Path Parameters:**
+  - `patientId` (required): ID của bệnh nhân
+- **Request Body (JSON):**
+  ```json
+  {
+    "fullName": "Nguyễn Văn A",
+    "dateOfBirth": "1990-01-15",
+    "gender": "MALE",
+    "phoneNumber": "0912345678",
+    "address": "123 Nguyễn Huệ, Q1, TP.HCM",
+    "medicalHistory": "Tiền sử dị ứng thuốc kháng sinh, cao huyết áp"
+  }
+  ```
+- **⭕ TẤT CẢ FIELDS ĐỀU OPTIONAL:**
+  - Bạn có thể gửi tất cả fields hoặc chỉ một vài fields cần update
+  - Chỉ những fields được gửi lên mới được update
+  - Những fields không gửi sẽ giữ nguyên giá trị cũ
+- **Validation:**
+  - `fullName`: Nếu gửi, không được rỗng (blank)
+  - `dateOfBirth`: Nếu gửi, phải là ngày trong quá khứ
+  - `gender`: Nếu gửi, phải là enum [MALE, FEMALE, OTHER]
+  - `phoneNumber`: Nếu gửi, không được rỗng (blank)
+  - `address`: Không bắt buộc (có thể null hoặc rỗng)
+  - `medicalHistory`: Không bắt buộc (có thể null hoặc rỗng)
+- **Logic:**
+  - Kiểm tra patient tồn tại
+  - Kiểm tra authorization (chỉ được cập nhật profile của chính mình)
+  - Validate các fields được gửi lên
+  - **CHỈ UPDATE CÁC FIELDS KHÔNG NULL** (partial update)
+  - Tự động cập nhật updatedAt timestamp
+  - **Lưu ý:** Email KHÔNG được phép thay đổi
+- **Response (200 OK):**
+  ```json
+  {
+    "patientId": 1,
+    "email": "patient@example.com",
+    "fullName": "Nguyễn Văn A",
+    "dateOfBirth": "1990-01-15",
+    "gender": "MALE",
+    "phoneNumber": "0912345678",
+    "address": "456 Lê Lợi, Q1, TP.HCM",
+    "medicalHistory": "Tiền sử dị ứng thuốc kháng sinh, cao huyết áp, đái tháo đường type 2"
+  }
+  ```
+- **Use Cases:**
+  
+  **Use Case 1: Update chỉ address**
+  ```json
+  {
+    "address": "456 Lê Lợi, Q1, TP.HCM"
+  }
+  ```
+  → Chỉ address được update, các fields khác giữ nguyên
+  
+  **Use Case 2: Update chỉ medical history**
+  ```json
+  {
+    "medicalHistory": "Thêm tiền sử đái tháo đường type 2"
+  }
+  ```
+  → Chỉ medicalHistory được update
+  
+  **Use Case 3: Update nhiều fields cùng lúc**
+  ```json
+  {
+    "fullName": "Nguyễn Văn B",
+    "phoneNumber": "0987654321",
+    "address": "789 Trần Hưng Đạo, Q5"
+  }
+  ```
+  → Cả 3 fields được update, các fields khác giữ nguyên
+- **Error Response (400 Bad Request):**
+  ```json
+  {
+    "timestamp": "2025-11-07T10:00:00.000+00:00",
+    "status": 400,
+    "error": "Bad Request",
+    "message": "Date of birth must be in the past"
+  }
+  ```
+- **Error Response (404 Not Found):**
+  ```json
+  {
+    "timestamp": "2025-11-07T10:00:00.000+00:00",
+    "status": 404,
+    "error": "Not Found",
+    "message": "Patient not found with ID: 999"
+  }
+  ```
+
+---
+
+## �🔐 VII. Security & Authorization Summary
 
 ### Public Endpoints (No Authentication)
 ```
@@ -778,6 +920,8 @@ POST   /api/appointments                     → Create appointment
 DELETE /api/appointments/{appointmentId}     → Cancel appointment (must be ≥48h before)
 PUT    /api/appointments/{appointmentId}     → Update appointment (symptoms anytime, reschedule ≥48h, max 2 times)
 GET    /api/appointments?patientId={id}&status={status} → Get appointments list (optional status filter)
+GET    /api/patients/{patientId}/profile     → Get patient profile
+PUT    /api/patients/{patientId}/profile     → Update patient profile
 ```
 
 ### DOCTOR Role Only
@@ -853,6 +997,27 @@ DELETE /api/doctors/{id}/availability/{blockId} → Delete block
    → Body: { "startTime": "11:00", "endTime": "13:00" }
    → Create 2 new blocks: 09:00-11:00 and 13:00-15:00
    → Delete original block
+```
+
+### Patient Profile Management Flow
+```
+1. Patient Login → JWT Token (PATIENT role)
+
+2. GET /api/patients/1/profile → View personal information
+   → Returns: email, fullName, dateOfBirth, gender, phoneNumber, address, medicalHistory
+
+3. PUT /api/patients/1/profile → Update personal information
+   → Body: {
+       "fullName": "Nguyễn Văn A",
+       "dateOfBirth": "1990-01-15",
+       "gender": "MALE",
+       "phoneNumber": "0912345678",
+       "address": "New address",
+       "medicalHistory": "Updated medical history"
+     }
+   → Validation: fullName, dateOfBirth, gender, phoneNumber required
+   → Email CANNOT be changed
+   → Returns: Updated profile
 ```
 
 ---
