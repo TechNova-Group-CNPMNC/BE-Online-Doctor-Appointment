@@ -2,16 +2,19 @@ package com.assignment.clinic.service;
 
 import com.assignment.clinic.dto.DoctorDTO;
 import com.assignment.clinic.dto.DoctorDetailDTO;
+import com.assignment.clinic.dto.DoctorRatingDTO;
 import com.assignment.clinic.dto.DoctorRegistrationRequest;
 import com.assignment.clinic.dto.DoctorSearchDTO;
 import com.assignment.clinic.dto.TimeSlotDTO;
 import com.assignment.clinic.entity.AvailabilityBlock;
 import com.assignment.clinic.entity.Doctor;
+import com.assignment.clinic.entity.Rating;
 import com.assignment.clinic.entity.Specialty;
 import com.assignment.clinic.entity.TimeSlot;
 import com.assignment.clinic.entity.User;
 import com.assignment.clinic.repository.AvailabilityBlockRepository;
 import com.assignment.clinic.repository.DoctorRepository;
+import com.assignment.clinic.repository.RatingRepository;
 import com.assignment.clinic.repository.SpecialtyRepository;
 import com.assignment.clinic.repository.TimeSlotRepository;
 import com.assignment.clinic.repository.UserRepository;
@@ -34,17 +37,20 @@ public class DoctorService {
     private final PasswordEncoder passwordEncoder;
     private final AvailabilityBlockRepository availabilityBlockRepository;
     private final TimeSlotRepository timeSlotRepository;
+    private final RatingRepository ratingRepository;
 
     public DoctorService(DoctorRepository doctorRepository, UserRepository userRepository,
                          SpecialtyRepository specialtyRepository, PasswordEncoder passwordEncoder,
                          AvailabilityBlockRepository availabilityBlockRepository,
-                         TimeSlotRepository timeSlotRepository) {
+                         TimeSlotRepository timeSlotRepository,
+                         RatingRepository ratingRepository) {
         this.doctorRepository = doctorRepository;
         this.userRepository = userRepository;
         this.specialtyRepository = specialtyRepository;
         this.passwordEncoder = passwordEncoder;
         this.availabilityBlockRepository = availabilityBlockRepository;
         this.timeSlotRepository = timeSlotRepository;
+        this.ratingRepository = ratingRepository;
     }
 
     @Transactional(readOnly = true)
@@ -169,7 +175,14 @@ public class DoctorService {
             list.sort(Comparator.comparing(TimeSlotDTO::getStartTime))
         );
         
-        return convertToDoctorDetailDTO(doctor, availableDates, timeSlotsByDate);
+        // Lấy ratings của bác sĩ (tối đa 10 ratings gần nhất)
+        List<Rating> ratings = ratingRepository.findByDoctorIdOrderByCreatedAtDesc(doctorId);
+        List<DoctorRatingDTO> ratingDTOs = ratings.stream()
+                .limit(10) // Giới hạn 10 ratings
+                .map(this::convertToDoctorRatingDTO)
+                .collect(Collectors.toList());
+        
+        return convertToDoctorDetailDTO(doctor, availableDates, timeSlotsByDate, ratingDTOs, ratings.size());
     }
 
     // Helper methods để convert entity sang DTO
@@ -187,7 +200,9 @@ public class DoctorService {
     }
 
     private DoctorDetailDTO convertToDoctorDetailDTO(Doctor doctor, List<LocalDate> availableDates,
-                                                      Map<LocalDate, List<TimeSlotDTO>> timeSlotsByDate) {
+                                                      Map<LocalDate, List<TimeSlotDTO>> timeSlotsByDate,
+                                                      List<DoctorRatingDTO> ratings,
+                                                      Integer totalRatings) {
         DoctorDetailDTO dto = new DoctorDetailDTO();
         dto.setId(doctor.getId());
         dto.setFullName(doctor.getFullName());
@@ -199,6 +214,8 @@ public class DoctorService {
                 .collect(Collectors.toList()));
         dto.setAvailableDates(availableDates);
         dto.setTimeSlotsByDate(timeSlotsByDate);
+        dto.setRatings(ratings);
+        dto.setTotalRatings(totalRatings);
         return dto;
     }
 
@@ -209,5 +226,15 @@ public class DoctorService {
             timeSlot.getEndTime(),
             timeSlot.getStatus().name()
         );
+    }
+    
+    private DoctorRatingDTO convertToDoctorRatingDTO(Rating rating) {
+        DoctorRatingDTO dto = new DoctorRatingDTO();
+        dto.setRatingId(rating.getId());
+        dto.setPatientName(rating.getPatient().getFullName());
+        dto.setStars(rating.getStars());
+        dto.setFeedbackText(rating.getFeedbackText());
+        dto.setCreatedAt(rating.getCreatedAt());
+        return dto;
     }
 }

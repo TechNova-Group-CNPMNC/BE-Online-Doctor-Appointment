@@ -1,0 +1,149 @@
+### ============================================
+### AI CHATBOT TEST REQUESTS
+### File: chatbot-test.http
+### ============================================
+
+### Variables
+@baseUrl = http://localhost:8000
+@token = YOUR_JWT_TOKEN_HERE
+
+### ============================================
+### 1. Health Check
+### ============================================
+
+GET {{baseUrl}}/api/chatbot/health
+
+
+### ============================================
+### 2. Test Case 1: Đau Đầu (Neurology)
+### ============================================
+
+POST {{baseUrl}}/api/chatbot/suggest-specialty
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "symptoms": "Tôi bị đau đầu dữ dội, chóng mặt và buồn nôn từ 2 ngày nay",
+  "age": "35",
+  "gender": "MALE",
+  "medicalHistory": "Không có tiền sử bệnh"
+}
+
+
+### ============================================
+### 3. Test Case 2: Đau Bụng (Gastroenterology)
+### ============================================
+
+POST {{baseUrl}}/api/chatbot/suggest-specialty
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "symptoms": "Đau bụng, tiêu chảy nhiều lần trong ngày, buồn nôn",
+  "age": "28",
+  "gender": "FEMALE"
+}
+
+
+### ============================================
+### 4. Test Case 3: Vấn Đề Da (Dermatology)
+### ============================================
+
+POST {{baseUrl}}/api/chatbot/suggest-specialty
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "symptoms": "Da bị ngứa, nổi mẩn đỏ, bong tróc",
+  "age": "22",
+  "gender": "FEMALE",
+  "medicalHistory": "Có tiền sử dị ứng thời tiết"
+}
+
+
+### ============================================
+### 5. Test Case 4: Đau Ngực - EMERGENCY CASE
+### ============================================
+
+POST {{baseUrl}}/api/chatbot/suggest-specialty
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "symptoms": "Đau ngực dữ dội lan ra tay trái, khó thở, toát mồ hôi lạnh, tim đập nhanh",
+  "age": "55",
+  "gender": "MALE",
+  "medicalHistory": "Có tiền sử huyết áp cao"
+}
+
+
+### ============================================
+### 6. Test Case 5: Triệu Chứng Mơ Hồ
+### ============================================
+
+POST {{baseUrl}}/api/chatbot/suggest-specialty
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "symptoms": "Mệt mỏi, chán ăn, sụt cân",
+  "age": "40",
+  "gender": "MALE"
+}
+
+
+### ============================================
+### 7. Test Case 6: Trẻ Em
+### ============================================
+
+POST {{baseUrl}}/api/chatbot/suggest-specialty
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "symptoms": "Sốt cao 39 độ, ho nhiều, khó thở",
+  "age": "5",
+  "gender": "MALE",
+  "medicalHistory": "Trẻ khỏe mạnh, không bệnh nền"
+}
+
+
+### ============================================
+### 8. Test Case 7: Minimal Request (Chỉ triệu chứng)
+### ============================================
+
+POST {{baseUrl}}/api/chatbot/suggest-specialty
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "symptoms": "Đau răng dữ dội, sưng lợi"
+}
+
+
+### ============================================
+### EXPECTED RESPONSE FORMAT
+### ============================================
+
+# {
+#   "analysis": "Phân tích chi tiết của AI về triệu chứng...",
+#   "suggestedSpecialties": [
+#     {
+#       "specialtyId": 1,
+#       "specialtyName": "Neurology",
+#       "reason": "Lý do gợi ý chuyên khoa này",
+#       "confidenceScore": 85
+#     }
+#   ],
+#   "suggestedDoctors": [
+#     {
+#       "doctorId": 5,
+#       "doctorName": "Dr. Nguyễn Văn A",
+#       "specialty": "Neurology",
+#       "rating": 4.8,
+#       "hasAvailableSlots": true
+#     }
+#   ],
+#   "emergencyWarning": false,
+#   "emergencyMessage": null
+# }

@@ -29,7 +29,7 @@ public class Doctor {
     @Column(name = "degree", length = 100)
     private String degree;
 
-    @Lob // Để ánh xạ kiểu TEXT
+    @Column(columnDefinition = "TEXT")  // ✅ Use TEXT instead of OID (no @Lob)
     private String bio;
 
     @Column(name = "average_rating", nullable = false, precision = 3, scale = 2)

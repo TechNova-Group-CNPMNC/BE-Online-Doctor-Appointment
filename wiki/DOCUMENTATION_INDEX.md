@@ -26,7 +26,15 @@ Complete documentation for the Spring Boot REST API with JWT authentication.
 | [README.md](README.md) | Database schema & enums | Understanding data structure |
 | [API Documents.md](API%20Documents.md) | Complete API specifications | Building frontend or understanding business logic |
 
-### **🧪 Testing Documentation**
+### **� AI Chatbot Documentation**
+
+| File | Purpose | When to Read |
+|------|---------|--------------|
+| **[CHATBOT_QUICK_START.md](CHATBOT_QUICK_START.md)** ⭐ | **Quick setup (3 steps)** | **Setting up AI Chatbot** |
+| [GEMINI_AI_SETUP_GUIDE.md](GEMINI_AI_SETUP_GUIDE.md) | Complete Gemini integration guide | Detailed setup & troubleshooting |
+| [chatbot-test.http](chatbot-test.http) | Test requests collection | Testing chatbot endpoints |
+
+### **�🧪 Testing Documentation**
 
 | File | Purpose | When to Read |
 |------|---------|--------------|
@@ -54,6 +62,16 @@ Complete documentation for the Spring Boot REST API with JWT authentication.
 2. Import: Online-Doctor-Appointment-API.postman_collection.json
 3. Follow: Quick Start steps
 4. Reference: JWT_AUTH_TESTS.md for security tests
+```
+
+### **🤖 I want to setup AI Chatbot**
+
+```
+1. Read: CHATBOT_QUICK_START.md (3 minutes)
+2. Get Gemini API key (FREE at https://makersuite.google.com/app/apikey)
+3. Add to .env: GEMINI_API_KEY=your-key
+4. Test: chatbot-test.http file
+5. Reference: GEMINI_AI_SETUP_GUIDE.md for troubleshooting
 ```
 
 ### **🏗️ I want to build a frontend**
@@ -100,7 +118,12 @@ Complete documentation for the Spring Boot REST API with JWT authentication.
 │   ├── README.md                              [Database Schema]
 │   └── API Documents.md                       [API Specifications]
 │
-├── 🧪 Testing Documentation
+├── � AI Chatbot Documentation
+│   ├── CHATBOT_QUICK_START.md       ⭐ AI SETUP
+│   ├── GEMINI_AI_SETUP_GUIDE.md               [Complete Guide]
+│   └── chatbot-test.http                      [Test Requests]
+│
+├── �🧪 Testing Documentation
 │   ├── POSTMAN_QUICK_REF.md         ⭐ START HERE
 │   ├── POSTMAN_GUIDE.md                       [Complete Guide]
 │   ├── API_TESTING_README.md                  [Testing Overview]

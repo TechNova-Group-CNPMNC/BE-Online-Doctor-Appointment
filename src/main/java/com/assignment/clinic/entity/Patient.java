@@ -36,9 +36,20 @@ public class Patient {
     @Column(name = "phone_number", length = 20, unique = true)
     private String phoneNumber;
 
+    @Column(name = "address", length = 255)
+    private String address;
+
+    @Column(name = "medical_history", columnDefinition = "TEXT")
+    private String medicalHistory;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt = Instant.now();
 
     @Column(name = "updated_at")
     private Instant updatedAt = Instant.now();
+
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = Instant.now();
+    }
 }

@@ -32,8 +32,7 @@ public class Rating {
     @Column(name = "stars", nullable = false)
     private Integer stars; // CONSTRAINT chk_stars CHECK (stars >= 1 AND stars <= 5)
 
-    @Lob
-    @Column(name = "feedback_text")
+    @Column(name = "feedback_text", columnDefinition = "TEXT")
     private String feedbackText;
 
     @Column(name = "created_at", nullable = false, updatable = false)

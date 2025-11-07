@@ -21,4 +21,8 @@ public class AppointmentResponse {
     private String symptoms;
     private String suspectedDisease;
     private String status;
+    
+    // Rating information (chỉ có khi appointment đã được rating)
+    private Integer rating; // Số sao (1-5)
+    private String feedback; // Nhận xét của bệnh nhân
 }
