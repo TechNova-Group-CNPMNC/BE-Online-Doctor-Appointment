@@ -106,6 +106,9 @@ public class AppointmentService {
         response.setSuspectedDisease(appointment.getSuspectedDisease());
         response.setStatus(appointment.getStatus().name());
         
+        // Thêm tiền sử bệnh của bệnh nhân
+        response.setMedicalHistory(appointment.getPatient().getMedicalHistory());
+        
         // Thêm rating và feedback nếu appointment đã được rating
         if (appointment.getRating() != null) {
             response.setRating(appointment.getRating().getStars());
@@ -157,7 +160,7 @@ public class AppointmentService {
         timeSlot.setStatus(TimeSlot.Status.AVAILABLE);
         timeSlotRepository.save(timeSlot);
 
-        return "Hủy lịch hẹn thành công. Khung giờ này đã được giải phóng cho bệnh nhân khác.";
+        return "Hủy lịch hẹn thành công!";
     }
 
     /**
@@ -298,4 +301,44 @@ public class AppointmentService {
                 .map(this::convertToAppointmentResponse)
                 .collect(Collectors.toList());
     }
+    
+    /**
+     * ✅ API: Complete Appointment - Bác sĩ xác nhận cuộc hẹn đã hoàn thành
+     */
+    @Transactional
+    public AppointmentResponse completeAppointment(Long appointmentId, Long doctorId) {
+        // STEP 1: Tìm appointment
+        Appointment appointment = appointmentRepository.findById(appointmentId)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy lịch hẹn với ID: " + appointmentId));
+
+        // STEP 2: Kiểm tra doctor ownership
+        Long currentUserId = SecurityUtils.getCurrentUserId();
+        Doctor doctor = doctorRepository.findByIdWithUser(doctorId)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy bác sĩ với ID: " + doctorId));
+
+        if (!currentUserId.equals(doctor.getUser().getId())) {
+            throw new AccessDeniedException("Bạn chỉ có thể xác nhận lịch hẹn của chính mình");
+        }
+
+        // STEP 3: Kiểm tra appointment thuộc về doctor này
+        if (!appointment.getDoctor().getId().equals(doctorId)) {
+            throw new IllegalArgumentException("Lịch hẹn này không thuộc về bác sĩ");
+        }
+
+        // STEP 4: Kiểm tra status hiện tại
+        if (appointment.getStatus() == Appointment.Status.COMPLETED) {
+            throw new IllegalStateException("Lịch hẹn này đã được hoàn thành trước đó");
+        }
+        
+        if (appointment.getStatus() == Appointment.Status.CANCELED) {
+            throw new IllegalStateException("Không thể hoàn thành lịch hẹn đã bị hủy");
+        }
+
+        // STEP 5: Cập nhật status thành COMPLETED
+        appointment.setStatus(Appointment.Status.COMPLETED);
+        Appointment completedAppointment = appointmentRepository.save(appointment);
+
+        return convertToAppointmentResponse(completedAppointment);
+    }
 }
+

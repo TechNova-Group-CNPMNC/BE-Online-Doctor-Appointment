@@ -114,4 +114,24 @@ public class DoctorController {
         List<AppointmentResponse> appointments = appointmentService.getDoctorAppointmentsByDate(doctorId, date);
         return ResponseEntity.ok(appointments);
     }
+    
+    /**
+     * API: Complete appointment (DOCTOR ROLE ONLY)
+     * PUT /api/doctors/{doctorId}/appointments/{appointmentId}/complete
+     * 
+     * Authorization: Bác sĩ xác nhận cuộc hẹn đã hoàn thành
+     * 
+     * @param doctorId ID của doctor
+     * @param appointmentId ID của appointment cần hoàn thành
+     * @return Appointment đã được cập nhật status thành COMPLETED
+     */
+    @PutMapping("/{doctorId}/appointments/{appointmentId}/complete")
+    @PreAuthorize("hasRole('DOCTOR')")
+    public ResponseEntity<AppointmentResponse> completeAppointment(
+            @PathVariable Long doctorId,
+            @PathVariable Long appointmentId) {
+        
+        AppointmentResponse appointment = appointmentService.completeAppointment(appointmentId, doctorId);
+        return ResponseEntity.ok(appointment);
+    }
 }

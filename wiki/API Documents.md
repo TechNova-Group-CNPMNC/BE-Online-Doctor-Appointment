@@ -510,7 +510,8 @@
     "endTime": "2025-11-05T09:30:00",
     "symptoms": "Đau đầu, chóng mặt",
     "suspectedDisease": "Migraine",
-    "status": "PENDING"
+    "status": "PENDING",
+    "medicalHistory": "Tiền sử dị ứng thuốc kháng sinh, cao huyết áp"
   }
   ```
 - **Error Response (400 Bad Request):**
@@ -626,7 +627,8 @@
     "endTime": "2025-11-10T09:30:00",
     "symptoms": "Đau đầu dữ dội, buồn nôn, chóng mặt",
     "suspectedDisease": "Migraine cấp tính",
-    "status": "PENDING"
+    "status": "PENDING",
+    "medicalHistory": "Tiền sử dị ứng thuốc kháng sinh, cao huyết áp"
   }
   ```
 - **Response (200 OK) - Reschedule (change timeSlot):**
@@ -641,7 +643,8 @@
     "startTime": "2025-11-12T14:00:00",
     "endTime": "2025-11-12T14:30:00",
     "symptoms": "Đau đầu, chóng mặt",
-    "status": "PENDING"
+    "status": "PENDING",
+    "medicalHistory": "Tiền sử dị ứng thuốc kháng sinh, cao huyết áp"
   }
   ```
 - **Error Response (400 Bad Request) - Reschedule quá gần:**
@@ -667,12 +670,16 @@
 
 ### 4. Get List of Appointments
 - **Endpoint:** `GET /api/appointments?patientId={patientId}&status={status}`
-- **Mô tả:** Lấy danh sách các cuộc hẹn của patient
+- **Mô tả:** Lấy danh sách các cuộc hẹn của patient (bao gồm cả tiền sử bệnh)
 - **Authentication:** ✅ Required
 - **Authorization:** 🔒 PATIENT role only (chỉ được xem appointments của chính mình)
 - **Query Parameters:**
   - `patientId` (required): ID của patient
   - `status` (optional): Filter theo trạng thái (PENDING, COMPLETED, CANCELED)
+- **Response Fields:**
+  - Tất cả thông tin appointment (id, patientId, doctorId, timeSlot, symptoms, etc.)
+  - `medicalHistory`: Tiền sử bệnh của bệnh nhân (từ Patient entity)
+  - `rating` & `feedback`: Chỉ có khi appointment đã COMPLETED và được đánh giá
 - **Logic:**
   1. Kiểm tra authorization (patient chỉ được xem appointments của mình)
   2. Nếu có `status` parameter:
@@ -680,7 +687,7 @@
      - Query appointments với filter: `findByPatientIdAndStatusOrderByTimeSlotStartTimeDesc`
   3. Nếu không có `status` parameter:
      - Query tất cả appointments: `findByPatientIdOrderByTimeSlotStartTimeDesc`
-  4. Convert to response DTOs và return
+  4. Convert to response DTOs (bao gồm medicalHistory) và return
 - **Response (200 OK) - Không có filter:**
   ```json
   [
@@ -695,7 +702,8 @@
       "endTime": "2025-11-15T10:30:00",
       "symptoms": "Khám định kỳ",
       "suspectedDisease": null,
-      "status": "PENDING"
+      "status": "PENDING",
+      "medicalHistory": "Tiền sử dị ứng thuốc kháng sinh, cao huyết áp"
     },
     {
       "id": 2,
@@ -708,7 +716,10 @@
       "endTime": "2025-11-08T14:30:00",
       "symptoms": "Đau bụng",
       "suspectedDisease": "Viêm dạ dày",
-      "status": "COMPLETED"
+      "status": "COMPLETED",
+      "medicalHistory": "Tiền sử dị ứng thuốc kháng sinh, cao huyết áp",
+      "rating": 5,
+      "feedback": "Bác sĩ tận tình, chẩn đoán chính xác"
     },
     {
       "id": 1,
@@ -721,7 +732,8 @@
       "endTime": "2025-11-05T09:30:00",
       "symptoms": "Đau đầu",
       "suspectedDisease": "Migraine",
-      "status": "CANCELED"
+      "status": "CANCELED",
+      "medicalHistory": "Tiền sử dị ứng thuốc kháng sinh, cao huyết áp"
     }
   ]
   ```
@@ -739,7 +751,8 @@
       "endTime": "2025-11-15T10:30:00",
       "symptoms": "Khám định kỳ",
       "suspectedDisease": null,
-      "status": "PENDING"
+      "status": "PENDING",
+      "medicalHistory": "Tiền sử dị ứng thuốc kháng sinh, cao huyết áp"
     }
   ]
   ```
@@ -1098,9 +1111,10 @@ POST   /api/appointments/{appointmentId}/rating → Create rating and comment (o
 
 ### DOCTOR Role Only
 ```
-POST   /api/doctors/{id}/availability                      → Create availability block
-DELETE /api/doctors/{id}/availability/{blockId}            → Delete block
-GET    /api/doctors/{doctorId}/appointments?date={date}    → Get doctor appointments by date
+POST   /api/doctors/{id}/availability                                        → Create availability block
+DELETE /api/doctors/{id}/availability/{blockId}                              → Delete block
+GET    /api/doctors/{doctorId}/appointments?date={date}                      → Get doctor appointments by date
+PUT    /api/doctors/{doctorId}/appointments/{appointmentId}/complete         → Complete appointment (PENDING → COMPLETED)
 ```
 
 ---
@@ -1238,6 +1252,121 @@ GET    /api/doctors/{doctorId}/appointments?date={date}    → Get doctor appoin
   - ✅ Verify doctor ownership (user.id phải match với doctor.user.id)
   - ❌ Không cho phép doctor xem lịch của doctor khác
 
+### 2. Complete Appointment (Mark as Completed)
+- **Endpoint:** `PUT /api/doctors/{doctorId}/appointments/{appointmentId}/complete`
+- **Mô tả:** Bác sĩ xác nhận cuộc hẹn đã hoàn thành (chuyển status từ PENDING → COMPLETED)
+- **Authentication:** ✅ Required
+- **Authorization:** 🔒 DOCTOR role only (chỉ được xác nhận lịch hẹn của chính mình)
+- **Path Parameters:**
+  - `doctorId` (required): ID của bác sĩ
+  - `appointmentId` (required): ID của appointment cần xác nhận hoàn thành
+- **Request Body:** Không cần body
+- **Logic:**
+  1. Kiểm tra appointment tồn tại
+  2. Kiểm tra doctor ownership (user.id phải match với doctor.user.id)
+  3. Kiểm tra appointment thuộc về doctor này
+  4. Validate status hiện tại:
+     - Nếu đã COMPLETED → Throw error
+     - Nếu đã CANCELED → Throw error
+  5. Cập nhật appointment.status = COMPLETED
+  6. Trả về appointment đã được cập nhật
+- **Response (200 OK):**
+  ```json
+  {
+    "id": 15,
+    "patientId": 3,
+    "patientName": "Nguyễn Văn A",
+    "doctorId": 1,
+    "doctorName": "Dr. John Smith",
+    "timeSlotId": 101,
+    "startTime": "2025-11-08T09:00:00",
+    "endTime": "2025-11-08T09:30:00",
+    "symptoms": "Đau đầu, chóng mặt",
+    "suspectedDisease": "Migraine",
+    "status": "COMPLETED",
+    "rating": null,
+    "feedback": null
+  }
+  ```
+- **Error Response (403 Forbidden) - Xác nhận lịch của bác sĩ khác:**
+  ```json
+  {
+    "timestamp": "2025-11-08T10:00:00.000+00:00",
+    "status": 403,
+    "error": "Forbidden",
+    "message": "Bạn chỉ có thể xác nhận lịch hẹn của chính mình"
+  }
+  ```
+- **Error Response (400 Bad Request) - Appointment không thuộc về doctor:**
+  ```json
+  {
+    "timestamp": "2025-11-08T10:00:00.000+00:00",
+    "status": 400,
+    "error": "Bad Request",
+    "message": "Lịch hẹn này không thuộc về bác sĩ"
+  }
+  ```
+- **Error Response (400 Bad Request) - Appointment đã hoàn thành:**
+  ```json
+  {
+    "timestamp": "2025-11-08T10:00:00.000+00:00",
+    "status": 400,
+    "error": "Bad Request",
+    "message": "Lịch hẹn này đã được hoàn thành trước đó"
+  }
+  ```
+- **Error Response (400 Bad Request) - Appointment đã bị hủy:**
+  ```json
+  {
+    "timestamp": "2025-11-08T10:00:00.000+00:00",
+    "status": 400,
+    "error": "Bad Request",
+    "message": "Không thể hoàn thành lịch hẹn đã bị hủy"
+  }
+  ```
+- **Error Response (404 Not Found) - Appointment không tồn tại:**
+  ```json
+  {
+    "timestamp": "2025-11-08T10:00:00.000+00:00",
+    "status": 404,
+    "error": "Not Found",
+    "message": "Không tìm thấy lịch hẹn với ID: 999"
+  }
+  ```
+- **Use Cases:**
+  
+  **Use Case 1: Bác sĩ xác nhận hoàn thành sau khi khám xong**
+  ```bash
+  PUT /api/doctors/1/appointments/15/complete
+  Authorization: Bearer {jwt_token}
+  ```
+  → Chuyển status của appointment từ PENDING → COMPLETED
+  → Bệnh nhân có thể đánh giá (rating) sau khi appointment COMPLETED
+  
+  **Use Case 2: Xác nhận nhiều appointments trong ngày**
+  ```bash
+  # Xem danh sách appointments hôm nay
+  GET /api/doctors/1/appointments?date=2025-11-08
+  
+  # Xác nhận từng appointment đã khám xong
+  PUT /api/doctors/1/appointments/15/complete
+  PUT /api/doctors/1/appointments/16/complete
+  PUT /api/doctors/1/appointments/17/complete
+  ```
+  → Bác sĩ xác nhận lần lượt các cuộc hẹn đã hoàn thành
+- **Business Logic:**
+  - Chỉ appointments có status = PENDING mới có thể chuyển sang COMPLETED
+  - Appointment đã CANCELED không thể chuyển sang COMPLETED
+  - Appointment đã COMPLETED không thể xác nhận lại
+  - Sau khi COMPLETED, bệnh nhân mới có thể để lại rating và feedback
+  - Bác sĩ chỉ được xác nhận appointments của chính mình (authorization check)
+- **Security:**
+  - ✅ Yêu cầu JWT token hợp lệ
+  - ✅ Yêu cầu role = DOCTOR
+  - ✅ Verify doctor ownership (user.id phải match với doctor.user.id)
+  - ✅ Verify appointment thuộc về doctor đang login
+  - ❌ Không cho phép doctor xác nhận lịch hẹn của doctor khác
+
 ---
 
 ## 📊 IX. Data Flow Diagram
@@ -1298,7 +1427,14 @@ GET    /api/doctors/{doctorId}/appointments?date={date}    → Get doctor appoin
    → Returns: All appointments (PENDING, COMPLETED, CANCELED) sorted by startTime
    → Includes patient info, symptoms, and rating/feedback if completed
 
-5. DELETE /api/doctors/1/availability/1 → Delete block
+5. PUT /api/doctors/1/appointments/15/complete → Complete appointment after examination
+   → Backend: Verify doctor ownership
+   → Check appointment belongs to this doctor
+   → Validate status (must be PENDING)
+   → Update appointment.status → COMPLETED
+   → Patient can now rate this appointment
+
+6. DELETE /api/doctors/1/availability/1 → Delete block
    
    Option A - Delete entire block:
    → No request body
