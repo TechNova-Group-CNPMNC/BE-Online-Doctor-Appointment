@@ -1098,9 +1098,145 @@ POST   /api/appointments/{appointmentId}/rating → Create rating and comment (o
 
 ### DOCTOR Role Only
 ```
-POST   /api/doctors/{id}/availability           → Create availability block
-DELETE /api/doctors/{id}/availability/{blockId} → Delete block
+POST   /api/doctors/{id}/availability                      → Create availability block
+DELETE /api/doctors/{id}/availability/{blockId}            → Delete block
+GET    /api/doctors/{doctorId}/appointments?date={date}    → Get doctor appointments by date
 ```
+
+---
+
+## 🩺 X. Doctor Appointment Management API (Doctor Only)
+
+### 1. Get Doctor Appointments by Date
+- **Endpoint:** `GET /api/doctors/{doctorId}/appointments?date={date}`
+- **Mô tả:** Bác sĩ xem tất cả các cuộc hẹn của mình trong một ngày cụ thể
+- **Authentication:** ✅ Required
+- **Authorization:** 🔒 DOCTOR role only (chỉ được xem lịch hẹn của chính mình)
+- **Path Parameters:**
+  - `doctorId` (required): ID của bác sĩ
+- **Query Parameters:**
+  - `date` (required): Ngày cần xem lịch hẹn (format: yyyy-MM-dd, ví dụ: 2025-11-08)
+- **Logic:**
+  1. Kiểm tra doctor tồn tại
+  2. Kiểm tra authorization (doctor chỉ được xem appointments của chính mình)
+  3. Lọc tất cả appointments của doctor trong ngày được chỉ định
+  4. Sắp xếp theo thời gian bắt đầu (startTime) tăng dần
+  5. Convert to response DTOs và return
+- **Response (200 OK):**
+  ```json
+  [
+    {
+      "id": 15,
+      "patientId": 3,
+      "patientName": "Nguyễn Văn A",
+      "doctorId": 1,
+      "doctorName": "Dr. John Smith",
+      "timeSlotId": 101,
+      "startTime": "2025-11-08T09:00:00",
+      "endTime": "2025-11-08T09:30:00",
+      "symptoms": "Đau đầu, chóng mặt",
+      "suspectedDisease": "Migraine",
+      "status": "PENDING",
+      "rating": null,
+      "feedback": null
+    },
+    {
+      "id": 16,
+      "patientId": 5,
+      "patientName": "Trần Thị B",
+      "doctorId": 1,
+      "doctorName": "Dr. John Smith",
+      "timeSlotId": 102,
+      "startTime": "2025-11-08T10:00:00",
+      "endTime": "2025-11-08T10:30:00",
+      "symptoms": "Đau bụng, buồn nôn",
+      "suspectedDisease": "Viêm dạ dày",
+      "status": "PENDING",
+      "rating": null,
+      "feedback": null
+    },
+    {
+      "id": 17,
+      "patientId": 8,
+      "patientName": "Lê Văn C",
+      "doctorId": 1,
+      "doctorName": "Dr. John Smith",
+      "timeSlotId": 103,
+      "startTime": "2025-11-08T14:00:00",
+      "endTime": "2025-11-08T14:30:00",
+      "symptoms": "Khám định kỳ",
+      "suspectedDisease": null,
+      "status": "COMPLETED",
+      "rating": 5,
+      "feedback": "Bác sĩ rất tận tâm"
+    }
+  ]
+  ```
+- **Response Fields:**
+  - `id`: ID của appointment
+  - `patientId`: ID của bệnh nhân
+  - `patientName`: Tên bệnh nhân
+  - `doctorId`: ID của bác sĩ
+  - `doctorName`: Tên bác sĩ
+  - `timeSlotId`: ID của time slot
+  - `startTime`: Thời gian bắt đầu
+  - `endTime`: Thời gian kết thúc
+  - `symptoms`: Triệu chứng của bệnh nhân
+  - `suspectedDisease`: Bệnh nghi ngờ
+  - `status`: Trạng thái appointment (PENDING, COMPLETED, CANCELED)
+  - `rating`: Đánh giá của bệnh nhân (1-5 sao) - chỉ có khi status = COMPLETED và đã được rating
+  - `feedback`: Nhận xét của bệnh nhân - chỉ có khi status = COMPLETED và đã được rating
+- **Error Response (403 Forbidden) - Xem lịch của bác sĩ khác:**
+  ```json
+  {
+    "timestamp": "2025-11-08T10:00:00.000+00:00",
+    "status": 403,
+    "error": "Forbidden",
+    "message": "You can only view your own appointments"
+  }
+  ```
+- **Error Response (404 Not Found) - Doctor không tồn tại:**
+  ```json
+  {
+    "timestamp": "2025-11-08T10:00:00.000+00:00",
+    "status": 404,
+    "error": "Not Found",
+    "message": "Doctor not found with id: 999"
+  }
+  ```
+- **Use Cases:**
+  
+  **Use Case 1: Xem lịch hẹn hôm nay**
+  ```bash
+  GET /api/doctors/1/appointments?date=2025-11-08
+  Authorization: Bearer {jwt_token}
+  ```
+  → Hiển thị tất cả appointments của bác sĩ ID=1 trong ngày 08/11/2025
+  
+  **Use Case 2: Xem lịch hẹn ngày mai để chuẩn bị**
+  ```bash
+  GET /api/doctors/1/appointments?date=2025-11-09
+  Authorization: Bearer {jwt_token}
+  ```
+  → Bác sĩ xem trước lịch hẹn ngày mai
+  
+  **Use Case 3: Xem lịch hẹn tuần sau để lên kế hoạch**
+  ```bash
+  GET /api/doctors/1/appointments?date=2025-11-15
+  Authorization: Bearer {jwt_token}
+  ```
+  → Bác sĩ kiểm tra lịch hẹn trong tương lai
+- **Business Logic:**
+  - Chỉ lọc appointments mà `DATE(timeSlot.startTime) = date`
+  - Không phân biệt status (hiển thị tất cả: PENDING, COMPLETED, CANCELED)
+  - Sắp xếp theo thời gian bắt đầu tăng dần (appointment sớm nhất lên đầu)
+  - Bác sĩ chỉ được xem appointments của chính mình (authorization check)
+  - Nếu ngày đó không có appointment nào → Trả về array rỗng `[]`
+- **Security:**
+  - ✅ Yêu cầu JWT token hợp lệ
+  - ✅ Yêu cầu role = DOCTOR
+  - ✅ Verify doctor ownership (user.id phải match với doctor.user.id)
+  - ❌ Không cho phép doctor xem lịch của doctor khác
 
 ---
 
@@ -1151,10 +1287,18 @@ DELETE /api/doctors/{id}/availability/{blockId} → Delete block
 ### Doctor Schedule Management Flow
 ```
 1. Doctor Login → JWT Token (DOCTOR role)
+
 2. POST /api/doctors/1/availability → Create work schedule (09:00-15:00)
    → Backend: Create block → Auto-generate 30-min time slots
+
 3. GET /api/doctors/1/availability → View all blocks
-4. DELETE /api/doctors/1/availability/1 → Delete block
+
+4. GET /api/doctors/1/appointments?date=2025-11-08 → View appointments for specific date
+   → Backend: Filter appointments by doctorId and date
+   → Returns: All appointments (PENDING, COMPLETED, CANCELED) sorted by startTime
+   → Includes patient info, symptoms, and rating/feedback if completed
+
+5. DELETE /api/doctors/1/availability/1 → Delete block
    
    Option A - Delete entire block:
    → No request body
@@ -1331,7 +1475,7 @@ GET /api/appointments?patientId=1&status=CANCELED
 
 ---
 
-**Last Updated:** November 4, 2025  
+**Last Updated:** November 8, 2025  
 **API Version:** 1.0  
 **Base URL:** `http://localhost:8000`
 Đồng thời ở API Get List of Appointments, đối với các appointment đã completed thì hãy lấy thêm rating và feedback. 
