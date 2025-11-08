@@ -33,16 +33,16 @@ public class RatingService {
     public RatingResponse createRating(Long appointmentId, RatingRequest request) {
         // 1. Kiểm tra appointment tồn tại
         Appointment appointment = appointmentRepository.findById(appointmentId)
-                .orElseThrow(() -> new RuntimeException("Appointment not found with ID: " + appointmentId));
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy lịch hẹn với ID: " + appointmentId));
 
         // 2. Kiểm tra appointment đã COMPLETED chưa
         if (appointment.getStatus() != Appointment.Status.COMPLETED) {
-            throw new RuntimeException("Can only rate completed appointments. Current status: " + appointment.getStatus());
+            throw new RuntimeException("Chỉ có thể đánh giá lịch hẹn đã hoàn thành. Trạng thái hiện tại: " + appointment.getStatus());
         }
 
         // 3. Kiểm tra appointment đã được rating chưa
         if (ratingRepository.findByAppointmentId(appointmentId).isPresent()) {
-            throw new RuntimeException("This appointment has already been rated");
+            throw new RuntimeException("Lịch hẹn này đã được đánh giá rồi");
         }
 
         // 4. Tạo rating mới
@@ -67,7 +67,7 @@ public class RatingService {
      */
     private void recalculateDoctorAverageRating(Long doctorId) {
         Doctor doctor = doctorRepository.findById(doctorId)
-                .orElseThrow(() -> new RuntimeException("Doctor not found with ID: " + doctorId));
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy bác sĩ với ID: " + doctorId));
 
         // Lấy tất cả ratings của bác sĩ
         List<Rating> ratings = ratingRepository.findByDoctorIdOrderByCreatedAtDesc(doctorId);

@@ -21,7 +21,7 @@ public class PatientService {
      */
     public PatientProfileResponse getPatientProfile(Long patientId) {
         Patient patient = patientRepository.findById(patientId)
-            .orElseThrow(() -> new IllegalArgumentException("Patient not found with ID: " + patientId));
+            .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy bệnh nhân với ID: " + patientId));
         
         return PatientProfileResponse.builder()
             .patientId(patient.getId())
@@ -42,7 +42,7 @@ public class PatientService {
     @Transactional
     public PatientProfileResponse updatePatientProfile(Long patientId, PatientUpdateRequest request) {
         Patient patient = patientRepository.findById(patientId)
-            .orElseThrow(() -> new IllegalArgumentException("Patient not found with ID: " + patientId));
+            .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy bệnh nhân với ID: " + patientId));
         
         // Chỉ update các fields không null (partial update)
         if (request.getFullName() != null && !request.getFullName().isBlank()) {

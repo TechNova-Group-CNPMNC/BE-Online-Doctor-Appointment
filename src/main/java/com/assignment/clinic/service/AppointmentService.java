@@ -46,29 +46,29 @@ public class AppointmentService {
     public AppointmentResponse createAppointment(AppointmentRequest request) {
         // 🔒 STEP 1: Verify patient ownership
         Patient patient = patientRepository.findByIdWithUser(request.getPatientId())
-                .orElseThrow(() -> new IllegalArgumentException("Patient not found with id: " + request.getPatientId()));
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy bệnh nhân với ID: " + request.getPatientId()));
 
         Long currentUserId = SecurityUtils.getCurrentUserId();
         if (!currentUserId.equals(patient.getUser().getId())) {
-            throw new AccessDeniedException("You can only create appointments for yourself");
+            throw new AccessDeniedException("Bạn chỉ có thể đặt lịch hẹn cho chính mình");
         }
 
         // STEP 2: Kiểm tra doctor tồn tại
         // STEP 2: Kiểm tra doctor tồn tại
         Doctor doctor = doctorRepository.findById(request.getDoctorId())
-                .orElseThrow(() -> new IllegalArgumentException("Doctor not found with id: " + request.getDoctorId()));
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy bác sĩ với ID: " + request.getDoctorId()));
 
         // STEP 3: Kiểm tra time slot tồn tại và available
         TimeSlot timeSlot = timeSlotRepository.findById(request.getTimeSlotId())
-                .orElseThrow(() -> new IllegalArgumentException("Time slot not found with id: " + request.getTimeSlotId()));
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy khung giờ với ID: " + request.getTimeSlotId()));
 
         if (timeSlot.getStatus() != TimeSlot.Status.AVAILABLE) {
-            throw new IllegalStateException("Time slot is not available");
+            throw new IllegalStateException("Khung giờ này không còn trống");
         }
 
         // STEP 4: Kiểm tra time slot thuộc về đúng bác sĩ
         if (!timeSlot.getDoctor().getId().equals(request.getDoctorId())) {
-            throw new IllegalArgumentException("Time slot does not belong to the specified doctor");
+            throw new IllegalArgumentException("Khung giờ này không thuộc về bác sĩ đã chọn");
         }
 
         // STEP 5: Tạo appointment
@@ -122,20 +122,20 @@ public class AppointmentService {
     public String cancelAppointment(Long appointmentId) {
         // STEP 1: Tìm appointment với patient info để check authorization
         Appointment appointment = appointmentRepository.findByIdWithPatient(appointmentId)
-                .orElseThrow(() -> new IllegalArgumentException("Appointment not found with id: " + appointmentId));
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy lịch hẹn với ID: " + appointmentId));
 
         // STEP 2: Authorization check - Chỉ patient tạo appointment mới được hủy
         Long currentUserId = SecurityUtils.getCurrentUserId();
         if (!currentUserId.equals(appointment.getPatient().getUser().getId())) {
-            throw new AccessDeniedException("You can only cancel your own appointments");
+            throw new AccessDeniedException("Bạn chỉ có thể hủy lịch hẹn của chính mình");
         }
 
         // STEP 3: Kiểm tra status - Không thể hủy appointment đã CANCELED hoặc COMPLETED
         if (appointment.getStatus() == Appointment.Status.CANCELED) {
-            throw new IllegalStateException("Appointment is already canceled");
+            throw new IllegalStateException("Lịch hẹn này đã bị hủy trước đó");
         }
         if (appointment.getStatus() == Appointment.Status.COMPLETED) {
-            throw new IllegalStateException("Cannot cancel completed appointment");
+            throw new IllegalStateException("Không thể hủy lịch hẹn đã hoàn thành");
         }
 
         // STEP 4: Kiểm tra thời gian - Phải hủy trước 48h
@@ -144,8 +144,8 @@ public class AppointmentService {
         long hoursUntilAppointment = ChronoUnit.HOURS.between(now, appointmentTime);
 
         if (hoursUntilAppointment < 48) {
-            throw new IllegalStateException("Cannot cancel appointment. Must cancel at least 48 hours in advance. " +
-                    "Only " + hoursUntilAppointment + " hours remaining.");
+            throw new IllegalStateException("Không thể hủy lịch hẹn. Phải hủy trước ít nhất 48 giờ. " +
+                    "Chỉ còn " + hoursUntilAppointment + " giờ nữa.");
         }
 
         // STEP 5: Cập nhật status appointment thành CANCELED
@@ -157,7 +157,7 @@ public class AppointmentService {
         timeSlot.setStatus(TimeSlot.Status.AVAILABLE);
         timeSlotRepository.save(timeSlot);
 
-        return "Appointment canceled successfully. Time slot is now available for other patients.";
+        return "Hủy lịch hẹn thành công. Khung giờ này đã được giải phóng cho bệnh nhân khác.";
     }
 
     /**
@@ -167,20 +167,20 @@ public class AppointmentService {
     public AppointmentResponse updateAppointment(Long appointmentId, UpdateAppointmentRequest request) {
         // STEP 1: Tìm appointment với patient info để check authorization
         Appointment appointment = appointmentRepository.findByIdWithPatient(appointmentId)
-                .orElseThrow(() -> new IllegalArgumentException("Appointment not found with id: " + appointmentId));
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy lịch hẹn với ID: " + appointmentId));
 
         // STEP 2: Authorization check - Chỉ patient tạo appointment mới được update
         Long currentUserId = SecurityUtils.getCurrentUserId();
         if (!currentUserId.equals(appointment.getPatient().getUser().getId())) {
-            throw new AccessDeniedException("You can only update your own appointments");
+            throw new AccessDeniedException("Bạn chỉ có thể cập nhật lịch hẹn của chính mình");
         }
 
         // STEP 3: Kiểm tra status - Không thể update appointment đã CANCELED hoặc COMPLETED
         if (appointment.getStatus() == Appointment.Status.CANCELED) {
-            throw new IllegalStateException("Cannot update canceled appointment");
+            throw new IllegalStateException("Không thể cập nhật lịch hẹn đã bị hủy");
         }
         if (appointment.getStatus() == Appointment.Status.COMPLETED) {
-            throw new IllegalStateException("Cannot update completed appointment");
+            throw new IllegalStateException("Không thể cập nhật lịch hẹn đã hoàn thành");
         }
 
         // STEP 4: Update symptoms và suspected disease (không giới hạn thời gian/số lần)
@@ -199,27 +199,27 @@ public class AppointmentService {
             long hoursUntilAppointment = ChronoUnit.HOURS.between(now, appointmentTime);
 
             if (hoursUntilAppointment < 48) {
-                throw new IllegalStateException("Cannot reschedule appointment. Must reschedule at least 48 hours in advance. " +
-                        "Only " + hoursUntilAppointment + " hours remaining.");
+                throw new IllegalStateException("Không thể đổi lịch hẹn. Phải đổi lịch trước ít nhất 48 giờ. " +
+                        "Chỉ còn " + hoursUntilAppointment + " giờ nữa.");
             }
 
             // 5.2: Kiểm tra số lần reschedule - Tối đa 2 lần
             if (appointment.getRescheduleCount() >= 2) {
-                throw new IllegalStateException("Cannot reschedule appointment. Maximum 2 reschedules allowed. " +
-                        "Current reschedule count: " + appointment.getRescheduleCount());
+                throw new IllegalStateException("Không thể đổi lịch hẹn. Chỉ được đổi lịch tối đa 2 lần. " +
+                        "Số lần đã đổi: " + appointment.getRescheduleCount());
             }
 
             // 5.3: Kiểm tra new time slot tồn tại và available
             TimeSlot newTimeSlot = timeSlotRepository.findById(request.getNewTimeSlotId())
-                    .orElseThrow(() -> new IllegalArgumentException("New time slot not found with id: " + request.getNewTimeSlotId()));
+                    .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy khung giờ mới với ID: " + request.getNewTimeSlotId()));
 
             if (newTimeSlot.getStatus() != TimeSlot.Status.AVAILABLE) {
-                throw new IllegalStateException("New time slot is not available");
+                throw new IllegalStateException("Khung giờ mới không còn trống");
             }
 
             // 5.4: Kiểm tra new time slot thuộc về cùng bác sĩ
             if (!newTimeSlot.getDoctor().getId().equals(appointment.getDoctor().getId())) {
-                throw new IllegalArgumentException("New time slot does not belong to the same doctor");
+                throw new IllegalArgumentException("Khung giờ mới không thuộc về cùng bác sĩ");
             }
 
             // 5.5: Giải phóng old time slot (chuyển BOOKED → AVAILABLE)
@@ -249,10 +249,10 @@ public class AppointmentService {
         // STEP 1: Authorization check - Patient chỉ được xem appointments của mình
         Long currentUserId = SecurityUtils.getCurrentUserId();
         Patient patient = patientRepository.findByIdWithUser(patientId)
-                .orElseThrow(() -> new IllegalArgumentException("Patient not found with id: " + patientId));
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy bệnh nhân với ID: " + patientId));
 
         if (!currentUserId.equals(patient.getUser().getId())) {
-            throw new AccessDeniedException("You can only view your own appointments");
+            throw new AccessDeniedException("Bạn chỉ có thể xem lịch hẹn của chính mình");
         }
 
         // STEP 2: Get appointments với optional filter
@@ -264,7 +264,7 @@ public class AppointmentService {
                 Appointment.Status status = Appointment.Status.valueOf(statusFilter.toUpperCase());
                 appointments = appointmentRepository.findByPatientIdAndStatusOrderByTimeSlotStartTimeDesc(patientId, status);
             } catch (IllegalArgumentException e) {
-                throw new IllegalArgumentException("Invalid status filter. Valid values: PENDING, COMPLETED, CANCELED");
+                throw new IllegalArgumentException("Trạng thái không hợp lệ. Các giá trị hợp lệ: PENDING, COMPLETED, CANCELED");
             }
         } else {
             // Không filter, lấy tất cả
@@ -284,10 +284,10 @@ public class AppointmentService {
         // STEP 1: Authorization check - Doctor chỉ được xem appointments của mình
         Long currentUserId = SecurityUtils.getCurrentUserId();
         Doctor doctor = doctorRepository.findByIdWithUser(doctorId)
-                .orElseThrow(() -> new IllegalArgumentException("Doctor not found with id: " + doctorId));
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy bác sĩ với ID: " + doctorId));
 
         if (!currentUserId.equals(doctor.getUser().getId())) {
-            throw new AccessDeniedException("You can only view your own appointments");
+            throw new AccessDeniedException("Bạn chỉ có thể xem lịch hẹn của chính mình");
         }
 
         // STEP 2: Get appointments cho ngày cụ thể

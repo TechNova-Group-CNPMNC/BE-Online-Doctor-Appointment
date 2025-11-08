@@ -69,7 +69,7 @@ public class DoctorService {
 
         // 1. Kiểm tra Email đã tồn tại
         if (userRepository.findByEmail(request.getEmail()).isPresent()) {
-            throw new IllegalStateException("Email " + request.getEmail() + " is already taken.");
+            throw new IllegalStateException("Email " + request.getEmail() + " đã được sử dụng.");
         }
 
         // 2. Tạo và Lưu User
@@ -84,7 +84,7 @@ public class DoctorService {
         if (request.getSpecialtyIds() != null && !request.getSpecialtyIds().isEmpty()) {
             specialties = request.getSpecialtyIds().stream()
                     .map(id -> specialtyRepository.findById(id).orElseThrow(
-                            () -> new IllegalArgumentException("Specialty not found with ID: " + id)
+                            () -> new IllegalArgumentException("Không tìm thấy chuyên khoa với ID: " + id)
                     ))
                     .collect(Collectors.toSet());
         }
@@ -142,7 +142,7 @@ public class DoctorService {
     @Transactional(readOnly = true)
     public DoctorDetailDTO getDoctorDetailForAppointment(Long doctorId) {
         Doctor doctor = doctorRepository.findById(doctorId)
-                .orElseThrow(() -> new RuntimeException("Doctor not found with id: " + doctorId));
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy bác sĩ với ID: " + doctorId));
         
         // Lấy 7 ngày kế tiếp từ ngày hiện tại
         LocalDate today = LocalDate.now();

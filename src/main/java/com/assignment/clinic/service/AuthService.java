@@ -30,13 +30,13 @@ public class AuthService {
     public User registerUser(String email, String password, UserRole role, String fullName, LocalDate dateOfBirth, Gender gender, String phoneNumber) {
         // Kiểm tra email đã tồn tại
         if (userRepository.findByEmail(email).isPresent()) {
-            throw new RuntimeException("User with this email already exists");
+            throw new RuntimeException("Email này đã được sử dụng");
         }
         
         // Kiểm tra phone number đã tồn tại (nếu đăng ký Patient)
         if (role == UserRole.PATIENT && phoneNumber != null) {
             if (patientRepository.findByPhoneNumber(phoneNumber).isPresent()) {
-                throw new RuntimeException("Patient with this phone number already exists");
+                throw new RuntimeException("Số điện thoại này đã được sử dụng");
             }
         }
         

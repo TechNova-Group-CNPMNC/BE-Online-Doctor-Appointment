@@ -42,20 +42,20 @@ public class AvailabilityBlockService {
     createAvailabilityBlock(Long doctorId, AvailabilityBlockRequest request) {
         // 🔒 STEP 1: Verify ownership
         Doctor doctor = doctorRepository.findByIdWithUser(doctorId)
-                .orElseThrow(() -> new IllegalArgumentException("Doctor not found with ID: " + doctorId));
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy bác sĩ với ID: " + doctorId));
         
         Long currentUserId = SecurityUtils.getCurrentUserId();
         if (!currentUserId.equals(doctor.getUser().getId())) {
-            throw new AccessDeniedException("You can only create availability blocks for your own account");
+            throw new AccessDeniedException("Bạn chỉ có thể tạo khung giờ làm việc cho chính mình");
         }
 
         // STEP 2: Validate business rules
         if (request.getWorkDate().isBefore(LocalDate.now())) {
-            throw new IllegalArgumentException("Cannot create availability for past dates");
+            throw new IllegalArgumentException("Không thể tạo khung giờ làm việc cho ngày trong quá khứ");
         }
 
         if (!request.getStartTime().isBefore(request.getEndTime())) {
-            throw new IllegalArgumentException("Start time must be before end time");
+            throw new IllegalArgumentException("Thời gian bắt đầu phải trước thời gian kết thúc");
         }
 
         // STEP 3: Tạo availability block
@@ -111,11 +111,11 @@ public class AvailabilityBlockService {
     public List<AvailabilityBlockDTO> getAvailabilityBlocksByDoctorAndDate(Long doctorId, LocalDate date) {
         // 🔒 Verify ownership
         Doctor doctor = doctorRepository.findByIdWithUser(doctorId)
-                .orElseThrow(() -> new IllegalArgumentException("Doctor not found with ID: " + doctorId));
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy bác sĩ với ID: " + doctorId));
         
         Long currentUserId = SecurityUtils.getCurrentUserId();
         if (!currentUserId.equals(doctor.getUser().getId())) {
-            throw new AccessDeniedException("You can only view your own availability blocks");
+            throw new AccessDeniedException("Bạn chỉ có thể xem khung giờ làm việc của chính mình");
         }
 
         List<AvailabilityBlock> blocks = availabilityBlockRepository.findByDoctorIdAndWorkDate(doctorId, date);
@@ -130,11 +130,11 @@ public class AvailabilityBlockService {
     public List<AvailabilityBlockDTO> getAvailabilityBlocksByDoctor(Long doctorId) {
         // 🔒 Verify ownership
         Doctor doctor = doctorRepository.findByIdWithUser(doctorId)
-                .orElseThrow(() -> new IllegalArgumentException("Doctor not found with ID: " + doctorId));
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy bác sĩ với ID: " + doctorId));
         
         Long currentUserId = SecurityUtils.getCurrentUserId();
         if (!currentUserId.equals(doctor.getUser().getId())) {
-            throw new AccessDeniedException("You can only view your own availability blocks");
+            throw new AccessDeniedException("Bạn chỉ có thể xem khung giờ làm việc của chính mình");
         }
 
         List<AvailabilityBlock> blocks = availabilityBlockRepository.findByDoctorId(doctorId);
@@ -153,15 +153,15 @@ public class AvailabilityBlockService {
     public String deleteAvailabilityBlock(Long blockId, AvailabilityBlockRequest request) {
         // 🔒 STEP 1: Verify block ownership
         AvailabilityBlock block = availabilityBlockRepository.findById(blockId)
-                .orElseThrow(() -> new IllegalArgumentException("Availability block not found with ID: " + blockId));
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy khung giờ làm việc với ID: " + blockId));
 
         // Verify the logged-in user owns this doctor account
         Doctor doctor = doctorRepository.findByIdWithUser(block.getDoctor().getId())
-                .orElseThrow(() -> new IllegalArgumentException("Doctor not found"));
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy bác sĩ"));
         
         Long currentUserId = SecurityUtils.getCurrentUserId();
         if (!currentUserId.equals(doctor.getUser().getId())) {
-            throw new AccessDeniedException("You can only delete your own availability blocks");
+            throw new AccessDeniedException("Bạn chỉ có thể xóa khung giờ làm việc của chính mình");
         }
         
         // STEP 2: Trường hợp 1: Xóa toàn bộ block (không có request body)
@@ -171,8 +171,8 @@ public class AvailabilityBlockService {
                     .findByAvailabilityBlockAndStatus(block, TimeSlot.Status.BOOKED);
             
             if (!bookedSlots.isEmpty()) {
-                throw new IllegalStateException("Cannot delete availability block. " + 
-                        bookedSlots.size() + " time slot(s) already booked.");
+                throw new IllegalStateException("Không thể xóa khung giờ làm việc. " + 
+                        bookedSlots.size() + " khung giờ đã được đặt.");
             }
             
             // Xóa tất cả time slots trước (bao gồm cả AVAILABLE slots)
@@ -181,7 +181,7 @@ public class AvailabilityBlockService {
             
             // Sau đó mới xóa availability block
             availabilityBlockRepository.delete(block);
-            return "Availability block deleted completely.";
+            return "Đã xóa khung giờ làm việc hoàn toàn.";
         }
         
         // Trường hợp 2: Xóa một phần khung giờ
@@ -190,12 +190,12 @@ public class AvailabilityBlockService {
         
         // Validate: deleteStart và deleteEnd phải nằm trong block
         if (deleteStart.isBefore(block.getStartTime()) || deleteEnd.isAfter(block.getEndTime())) {
-            throw new RuntimeException("Delete time range must be within block time range (" + 
+            throw new RuntimeException("Khoảng thời gian xóa phải nằm trong khung giờ làm việc (" + 
                     block.getStartTime() + " - " + block.getEndTime() + ")");
         }
         
         if (!deleteStart.isBefore(deleteEnd)) {
-            throw new RuntimeException("Start time must be before end time");
+            throw new RuntimeException("Thời gian bắt đầu phải trước thời gian kết thúc");
         }
         
         // Lấy tất cả time slots trong khung giờ cần xóa
@@ -213,8 +213,8 @@ public class AvailabilityBlockService {
                 .collect(Collectors.toList());
         
         if (!bookedSlots.isEmpty()) {
-            throw new RuntimeException("Cannot delete time slots. " + 
-                    bookedSlots.size() + " slot(s) in this range already booked.");
+            throw new RuntimeException("Không thể xóa khung giờ. " + 
+                    bookedSlots.size() + " khung giờ trong khoảng này đã được đặt.");
         }
         
         // Xóa các time slots trong khung giờ
@@ -225,16 +225,16 @@ public class AvailabilityBlockService {
         if (deleteStart.equals(block.getStartTime()) && deleteEnd.isBefore(block.getEndTime())) {
             block.setStartTime(deleteEnd);
             availabilityBlockRepository.save(block);
-            return "Deleted first part (" + deleteStart + " - " + deleteEnd + "). " +
-                   "Block updated to " + deleteEnd + " - " + block.getEndTime();
+            return "Đã xóa phần đầu (" + deleteStart + " - " + deleteEnd + "). " +
+                   "Khung giờ được cập nhật thành " + deleteEnd + " - " + block.getEndTime();
         }
         
         // TH2.2: Xóa phần cuối (deleteEnd == block.endTime)
         if (deleteEnd.equals(block.getEndTime()) && deleteStart.isAfter(block.getStartTime())) {
             block.setEndTime(deleteStart);
             availabilityBlockRepository.save(block);
-            return "Deleted last part (" + deleteStart + " - " + deleteEnd + "). " +
-                   "Block updated to " + block.getStartTime() + " - " + deleteStart;
+            return "Đã xóa phần cuối (" + deleteStart + " - " + deleteEnd + "). " +
+                   "Khung giờ được cập nhật thành " + block.getStartTime() + " - " + deleteStart;
         }
         
         // TH2.3: Xóa phần giữa -> Tạo 2 blocks mới
@@ -260,12 +260,12 @@ public class AvailabilityBlockService {
             // Xóa block cũ
             availabilityBlockRepository.delete(block);
             
-            return "Deleted middle part (" + deleteStart + " - " + deleteEnd + "). " +
-                   "Created 2 new blocks: " + block1.getStartTime() + "-" + block1.getEndTime() + 
-                   " and " + block2.getStartTime() + "-" + block2.getEndTime();
+            return "Đã xóa phần giữa (" + deleteStart + " - " + deleteEnd + "). " +
+                   "Đã tạo 2 khung giờ mới: " + block1.getStartTime() + "-" + block1.getEndTime() + 
+                   " và " + block2.getStartTime() + "-" + block2.getEndTime();
         }
         
-        return "Time slots deleted successfully.";
+        return "Đã xóa khung giờ thành công.";
     }
 
     private AvailabilityBlockDTO convertToDTO(AvailabilityBlock block) {
