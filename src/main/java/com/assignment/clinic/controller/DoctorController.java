@@ -1,14 +1,17 @@
 package com.assignment.clinic.controller;
 
+import com.assignment.clinic.dto.AppointmentResponse;
 import com.assignment.clinic.dto.DoctorDTO;
 import com.assignment.clinic.dto.DoctorDetailDTO;
 import com.assignment.clinic.dto.DoctorRegistrationRequest;
 import com.assignment.clinic.dto.DoctorSearchDTO;
 import com.assignment.clinic.entity.Doctor;
+import com.assignment.clinic.service.AppointmentService;
 import com.assignment.clinic.service.DoctorService;
 import jakarta.validation.Valid;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.http.ResponseEntity;
 
@@ -20,10 +23,12 @@ import java.util.List;
 public class DoctorController {
 
     private final DoctorService doctorService;
+    private final AppointmentService appointmentService;
 
     // Dependency Injection qua Constructor
-    public DoctorController(DoctorService doctorService) {
+    public DoctorController(DoctorService doctorService, AppointmentService appointmentService) {
         this.doctorService = doctorService;
+        this.appointmentService = appointmentService;
     }
 
     /**
@@ -88,5 +93,25 @@ public class DoctorController {
                     .status(HttpStatus.BAD_REQUEST)
                     .body(e.getMessage());
         }
+    }
+    
+    /**
+     * API: Get doctor appointments by date (DOCTOR ROLE ONLY)
+     * GET /api/doctors/{doctorId}/appointments?date={date}
+     * 
+     * Authorization: Doctor chỉ xem được lịch hẹn của chính mình
+     * 
+     * @param doctorId ID của doctor
+     * @param date Ngày cần xem lịch hẹn (format: yyyy-MM-dd)
+     * @return Danh sách appointments trong ngày đó
+     */
+    @GetMapping("/{doctorId}/appointments")
+    @PreAuthorize("hasRole('DOCTOR')")
+    public ResponseEntity<List<AppointmentResponse>> getDoctorAppointmentsByDate(
+            @PathVariable Long doctorId,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
+        
+        List<AppointmentResponse> appointments = appointmentService.getDoctorAppointmentsByDate(doctorId, date);
+        return ResponseEntity.ok(appointments);
     }
 }

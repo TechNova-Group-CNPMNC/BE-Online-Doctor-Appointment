@@ -276,4 +276,26 @@ public class AppointmentService {
                 .map(this::convertToAppointmentResponse)
                 .collect(Collectors.toList());
     }
+    
+    /**
+     * ✅ API: Get Doctor Appointments by Date - Doctor xem lịch hẹn theo ngày
+     */
+    public List<AppointmentResponse> getDoctorAppointmentsByDate(Long doctorId, java.time.LocalDate date) {
+        // STEP 1: Authorization check - Doctor chỉ được xem appointments của mình
+        Long currentUserId = SecurityUtils.getCurrentUserId();
+        Doctor doctor = doctorRepository.findByIdWithUser(doctorId)
+                .orElseThrow(() -> new IllegalArgumentException("Doctor not found with id: " + doctorId));
+
+        if (!currentUserId.equals(doctor.getUser().getId())) {
+            throw new AccessDeniedException("You can only view your own appointments");
+        }
+
+        // STEP 2: Get appointments cho ngày cụ thể
+        List<Appointment> appointments = appointmentRepository.findByDoctorIdAndDate(doctorId, date);
+
+        // STEP 3: Convert to response DTOs
+        return appointments.stream()
+                .map(this::convertToAppointmentResponse)
+                .collect(Collectors.toList());
+    }
 }

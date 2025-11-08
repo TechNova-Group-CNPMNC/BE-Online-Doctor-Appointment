@@ -33,4 +33,15 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
     
     // Tìm appointments của doctor theo status (optional filter)
     List<Appointment> findByDoctorIdAndStatusOrderByTimeSlotStartTimeAsc(Long doctorId, Status status);
+    
+    // Tìm appointments của doctor theo ngày cụ thể
+    @Query("SELECT a FROM Appointment a " +
+           "JOIN FETCH a.timeSlot ts " +
+           "JOIN FETCH a.patient p " +
+           "JOIN FETCH a.doctor d " +
+           "WHERE d.id = :doctorId " +
+           "AND FUNCTION('DATE', ts.startTime) = :date " +
+           "ORDER BY ts.startTime ASC")
+    List<Appointment> findByDoctorIdAndDate(@Param("doctorId") Long doctorId, 
+                                            @Param("date") java.time.LocalDate date);
 }
