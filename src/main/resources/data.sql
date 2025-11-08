@@ -28,21 +28,21 @@ ALTER SEQUENCE ratings_id_seq RESTART WITH 1;
 -- 1. SPECIALTIES (15 records)
 -- ========================================
 INSERT INTO specialties (name, created_at, updated_at) VALUES
-('Cardiology', NOW(), NOW()),
-('Dermatology', NOW(), NOW()),
-('Pediatrics', NOW(), NOW()),
-('Neurology', NOW(), NOW()),
-('Orthopedics', NOW(), NOW()),
-('Oncology', NOW(), NOW()),
-('Psychiatry', NOW(), NOW()),
-('Gastroenterology', NOW(), NOW()),
-('Endocrinology', NOW(), NOW()),
-('Pulmonology', NOW(), NOW()),
-('Nephrology', NOW(), NOW()),
-('Rheumatology', NOW(), NOW()),
-('Ophthalmology', NOW(), NOW()),
-('ENT (Ear, Nose & Throat)', NOW(), NOW()),
-('Urology', NOW(), NOW());
+('Tim mạch', NOW(), NOW()),
+('Da liễu', NOW(), NOW()),
+('Nhi khoa', NOW(), NOW()),
+('Thần kinh', NOW(), NOW()),
+('Chấn thương chỉnh hình', NOW(), NOW()),
+('Ung bướu', NOW(), NOW()),
+('Tâm thần', NOW(), NOW()),
+('Tiêu hóa', NOW(), NOW()),
+('Nội tiết', NOW(), NOW()),
+('Hô hấp', NOW(), NOW()),
+('Thận - Tiết niệu', NOW(), NOW()),
+('Thấp khớp', NOW(), NOW()),
+('Mắt', NOW(), NOW()),
+('Tai Mũi Họng', NOW(), NOW()),
+('Tiết niệu', NOW(), NOW());
 
 -- ========================================
 -- 2. USERS (50 records: 30 patients + 20 doctors)
@@ -295,48 +295,48 @@ SELECT
     bs.doctor_id,
     bs.id,
     CASE ((bs.rn - 1) % 20)
-        WHEN 0 THEN 'Chest pain and shortness of breath'
-        WHEN 1 THEN 'Skin rash and itching on arms'
-        WHEN 2 THEN 'Child has fever and cough for 3 days'
-        WHEN 3 THEN 'Severe headaches and dizziness'
-        WHEN 4 THEN 'Knee pain after sports injury'
-        WHEN 5 THEN 'Persistent abdominal pain and bloating'
-        WHEN 6 THEN 'Chronic fatigue and weight gain'
-        WHEN 7 THEN 'Difficulty breathing and wheezing'
-        WHEN 8 THEN 'Swelling in legs and feet'
-        WHEN 9 THEN 'Joint pain and stiffness in hands'
-        WHEN 10 THEN 'Persistent cough with blood in sputum'
-        WHEN 11 THEN 'Blurred vision and eye discomfort'
-        WHEN 12 THEN 'Ear pain and hearing loss'
-        WHEN 13 THEN 'Frequent and painful urination'
-        WHEN 14 THEN 'Lower back pain radiating to leg'
-        WHEN 15 THEN 'Anxiety attacks and sleep disturbances'
-        WHEN 16 THEN 'Irregular heartbeat and palpitations'
-        WHEN 17 THEN 'Severe acne and skin discoloration'
-        WHEN 18 THEN 'Developmental delays in child'
-        WHEN 19 THEN 'Memory loss and confusion'
+        WHEN 0 THEN 'Đau ngực và khó thở'
+        WHEN 1 THEN 'Phát ban và ngứa ở cánh tay'
+        WHEN 2 THEN 'Trẻ bị sốt và ho trong 3 ngày'
+        WHEN 3 THEN 'Đau đầu dữ dội và chóng mặt'
+        WHEN 4 THEN 'Đau đầu gối sau chấn thương thể thao'
+        WHEN 5 THEN 'Đau bụng và đầy hơi kéo dài'
+        WHEN 6 THEN 'Mệt mỏi mãn tính và tăng cân'
+        WHEN 7 THEN 'Khó thở và thở khò khè'
+        WHEN 8 THEN 'Sưng chân và bàn chân'
+        WHEN 9 THEN 'Đau khớp và cứng khớp ở bàn tay'
+        WHEN 10 THEN 'Ho dai dẳng có máu trong đờm'
+        WHEN 11 THEN 'Mờ mắt và khó chịu ở mắt'
+        WHEN 12 THEN 'Đau tai và giảm thính lực'
+        WHEN 13 THEN 'Tiểu buồi và đau khi đi tiểu'
+        WHEN 14 THEN 'Đau lưng dưới lan xuống chân'
+        WHEN 15 THEN 'Lo âu và rối loạn giấc ngủ'
+        WHEN 16 THEN 'Nhịp tim không đều và hồi hộp'
+        WHEN 17 THEN 'Mụn trứng cá nghiêm trọng và da đổi màu'
+        WHEN 18 THEN 'Chậm phát triển ở trẻ'
+        WHEN 19 THEN 'Mất trí nhớ và lú lẫn'
     END,
     CASE ((bs.rn - 1) % 20)
-        WHEN 0 THEN 'Possible angina'
-        WHEN 1 THEN 'Eczema or allergic reaction'
-        WHEN 2 THEN 'Upper respiratory infection'
-        WHEN 3 THEN 'Migraine'
-        WHEN 4 THEN 'Ligament strain'
-        WHEN 5 THEN 'Gastritis or IBS'
-        WHEN 6 THEN 'Hypothyroidism'
-        WHEN 7 THEN 'Asthma'
-        WHEN 8 THEN 'Kidney disease'
-        WHEN 9 THEN 'Rheumatoid arthritis'
-        WHEN 10 THEN 'Lung cancer concern'
-        WHEN 11 THEN 'Cataracts or glaucoma'
-        WHEN 12 THEN 'Otitis media'
-        WHEN 13 THEN 'UTI or kidney stones'
-        WHEN 14 THEN 'Herniated disc'
-        WHEN 15 THEN 'Generalized anxiety disorder'
-        WHEN 16 THEN 'Atrial fibrillation'
-        WHEN 17 THEN 'Severe acne vulgaris'
-        WHEN 18 THEN 'Autism spectrum concern'
-        WHEN 19 THEN 'Early dementia'
+        WHEN 0 THEN 'Nghi ngờ đau thắt ngực'
+        WHEN 1 THEN 'Chàm hoặc dị ứng'
+        WHEN 2 THEN 'Nhiễm trùng đường hô hấp trên'
+        WHEN 3 THEN 'Đau nửa đầu'
+        WHEN 4 THEN 'Căng dây chằng'
+        WHEN 5 THEN 'Viêm dạ dày hoặc hội chứng ruột kích thích'
+        WHEN 6 THEN 'Suy giáp'
+        WHEN 7 THEN 'Hen suyễn'
+        WHEN 8 THEN 'Bệnh thận'
+        WHEN 9 THEN 'Viêm khớp dạng thấp'
+        WHEN 10 THEN 'Nghi ngờ ung thư phổi'
+        WHEN 11 THEN 'Đục thủy tinh thể hoặc tăng nhãn áp'
+        WHEN 12 THEN 'Viêm tai giữa'
+        WHEN 13 THEN 'Nhiễm trùng đường tiết niệu hoặc sỏi thận'
+        WHEN 14 THEN 'Thoát vị đĩa đệm'
+        WHEN 15 THEN 'Rối loạn lo âu lan tỏa'
+        WHEN 16 THEN 'Rung nhĩ'
+        WHEN 17 THEN 'Mụn trứng cá thông thường nghiêm trọng'
+        WHEN 18 THEN 'Nghi ngờ rối loạn phổ tự kỷ'
+        WHEN 19 THEN 'Sa sút trí tuệ giai đoạn đầu'
     END,
     CASE
         WHEN RANDOM() < 0.5 THEN 'COMPLETED'
@@ -357,26 +357,26 @@ SELECT
     a.doctor_id,
     (3 + FLOOR(RANDOM() * 3))::INTEGER, -- Random rating 3-5
     CASE (FLOOR(RANDOM() * 20))::INTEGER
-        WHEN 0 THEN 'Excellent doctor! Very professional and caring.'
-        WHEN 1 THEN 'Good consultation, but waiting time was a bit long.'
-        WHEN 2 THEN 'Very knowledgeable and took time to explain everything.'
-        WHEN 3 THEN 'Listened to all my concerns and provided detailed answers.'
-        WHEN 4 THEN 'Best specialist I have ever consulted. Highly recommend!'
-        WHEN 5 THEN 'Professional service and accurate diagnosis.'
-        WHEN 6 THEN 'The doctor was patient and understanding.'
-        WHEN 7 THEN 'Great experience overall. Will come back again.'
-        WHEN 8 THEN 'Thorough examination and clear treatment plan.'
-        WHEN 9 THEN 'Very satisfied with the care I received.'
-        WHEN 10 THEN 'Competent doctor with excellent bedside manner.'
-        WHEN 11 THEN 'The consultation was informative and helpful.'
-        WHEN 12 THEN 'Doctor showed genuine concern for my health.'
-        WHEN 13 THEN 'Efficient and professional service.'
-        WHEN 14 THEN 'Would definitely recommend to friends and family.'
-        WHEN 15 THEN 'The doctor answered all my questions patiently.'
-        WHEN 16 THEN 'Very impressed with the level of care.'
-        WHEN 17 THEN 'Felt comfortable throughout the consultation.'
-        WHEN 18 THEN 'Knowledgeable and experienced professional.'
-        WHEN 19 THEN 'Outstanding medical care and attention to detail.'
+        WHEN 0 THEN 'Bác sĩ xuất sắc! Rất chuyên nghiệp và tận tâm.'
+        WHEN 1 THEN 'Tư vấn tốt, nhưng thời gian chờ hơi lâu.'
+        WHEN 2 THEN 'Rất am hiểu và dành thời gian giải thích mọi thứ.'
+        WHEN 3 THEN 'Lắng nghe tất cả các mối quan tâm của tôi và đưa ra câu trả lời chi tiết.'
+        WHEN 4 THEN 'Chuyên gia tốt nhất mà tôi từng tư vấn. Rất khuyến khích!'
+        WHEN 5 THEN 'Dịch vụ chuyên nghiệp và chẩn đoán chính xác.'
+        WHEN 6 THEN 'Bác sĩ kiên nhẫn và thông cảm.'
+        WHEN 7 THEN 'Trải nghiệm tuyệt vời nói chung. Sẽ quay lại lần nữa.'
+        WHEN 8 THEN 'Khám kỹ lưỡng và kế hoạch điều trị rõ ràng.'
+        WHEN 9 THEN 'Rất hài lòng với sự chăm sóc tôi nhận được.'
+        WHEN 10 THEN 'Bác sĩ có năng lực với phong thái ân cần tuyệt vời.'
+        WHEN 11 THEN 'Buổi tư vấn rất bổ ích và hữu ích.'
+        WHEN 12 THEN 'Bác sĩ thể hiện sự quan tâm chân thành đến sức khỏe của tôi.'
+        WHEN 13 THEN 'Dịch vụ hiệu quả và chuyên nghiệp.'
+        WHEN 14 THEN 'Chắc chắn sẽ giới thiệu cho bạn bè và gia đình.'
+        WHEN 15 THEN 'Bác sĩ trả lời tất cả các câu hỏi của tôi một cách kiên nhẫn.'
+        WHEN 16 THEN 'Rất ấn tượng với mức độ chăm sóc.'
+        WHEN 17 THEN 'Cảm thấy thoải mái trong suốt buổi tư vấn.'
+        WHEN 18 THEN 'Chuyên gia am hiểu và giàu kinh nghiệm.'
+        WHEN 19 THEN 'Chăm sóc y tế xuất sắc và chú ý đến từng chi tiết.'
     END,
     NOW() - (RANDOM() * INTERVAL '25 days')
 FROM appointments a
@@ -396,3 +396,311 @@ SET average_rating = (
 -- ========================================
 -- END OF SAMPLE DATA
 -- ========================================
+
+-- ========================================
+-- TEST DATA: COMPLETED APPOINTMENT WITHOUT RATING
+-- ========================================
+-- For testing rating feature
+-- Appointment 1: Patient 1 with Dr. Nguyen Van Hai (Dermatology)
+INSERT INTO appointments (patient_id, doctor_id, time_slot_id, symptoms, suspected_disease, status, reschedule_count, reminder_sent, created_at)
+SELECT
+    1,
+    2,
+    id,
+    'Bị mẩn đỏ và ngứa ở cánh tay, đã 1 tuần chưa hết',
+    'Có thể bị viêm da dị ứng',
+    'COMPLETED',
+    0,
+    true,
+    NOW() - INTERVAL '2 days'
+FROM time_slots
+WHERE status = 'AVAILABLE' AND doctor_id = 2
+ORDER BY start_time
+LIMIT 1;
+
+UPDATE time_slots SET status = 'BOOKED'
+WHERE id = (SELECT time_slot_id FROM appointments ORDER BY id DESC LIMIT 1);
+
+-- Appointment 2: Patient 1 with Dr. John Smith (Cardiology)
+INSERT INTO appointments (patient_id, doctor_id, time_slot_id, symptoms, suspected_disease, status, reschedule_count, reminder_sent, created_at)
+SELECT
+    1,
+    1,
+    id,
+    'Đau ngực khi gắng sức, thở nhanh, tim đập mạnh',
+    'Nghi ngờ bệnh tim mạch, cần kiểm tra ECG',
+    'COMPLETED',
+    0,
+    true,
+    NOW() - INTERVAL '5 days'
+FROM time_slots
+WHERE status = 'AVAILABLE' AND doctor_id = 1
+ORDER BY start_time
+LIMIT 1;
+
+UPDATE time_slots SET status = 'BOOKED'
+WHERE id = (SELECT time_slot_id FROM appointments ORDER BY id DESC LIMIT 1);
+
+-- Appointment 3: Patient 1 with Dr. Priya Patel (Pediatrics)
+INSERT INTO appointments (patient_id, doctor_id, time_slot_id, symptoms, suspected_disease, status, reschedule_count, reminder_sent, created_at)
+SELECT
+    1,
+    3,
+    id,
+    'Con bị sốt cao 39 độ, ho khan liên tục',
+    'Viêm đường hô hấp trên',
+    'COMPLETED',
+    0,
+    true,
+    NOW() - INTERVAL '3 days'
+FROM time_slots
+WHERE status = 'AVAILABLE' AND doctor_id = 3
+ORDER BY start_time
+LIMIT 1;
+
+UPDATE time_slots SET status = 'BOOKED'
+WHERE id = (SELECT time_slot_id FROM appointments ORDER BY id DESC LIMIT 1);
+
+-- Appointment 4: Patient 2 with Dr. Sarah Lee (Neurology)
+INSERT INTO appointments (patient_id, doctor_id, time_slot_id, symptoms, suspected_disease, status, reschedule_count, reminder_sent, created_at)
+SELECT
+    2,
+    4,
+    id,
+    'Đau đầu dữ dội một bên, buồn nôn, sợ ánh sáng',
+    'Migraine',
+    'COMPLETED',
+    0,
+    true,
+    NOW() - INTERVAL '1 day'
+FROM time_slots
+WHERE status = 'AVAILABLE' AND doctor_id = 4
+ORDER BY start_time
+LIMIT 1;
+
+UPDATE time_slots SET status = 'BOOKED'
+WHERE id = (SELECT time_slot_id FROM appointments ORDER BY id DESC LIMIT 1);
+
+-- Appointment 5: Patient 3 with Dr. Michael Wilson (Orthopedics)
+INSERT INTO appointments (patient_id, doctor_id, time_slot_id, symptoms, suspected_disease, status, reschedule_count, reminder_sent, created_at)
+SELECT
+    3,
+    5,
+    id,
+    'Đau đầu gối sau khi chơi bóng đá, sưng và khó cử động',
+    'Chấn thương dây chằng',
+    'COMPLETED',
+    0,
+    true,
+    NOW() - INTERVAL '4 days'
+FROM time_slots
+WHERE status = 'AVAILABLE' AND doctor_id = 5
+ORDER BY start_time
+LIMIT 1;
+
+UPDATE time_slots SET status = 'BOOKED'
+WHERE id = (SELECT time_slot_id FROM appointments ORDER BY id DESC LIMIT 1);
+
+-- Appointment 6: Patient 4 with Dr. Emily Chen (Gastroenterology)
+INSERT INTO appointments (patient_id, doctor_id, time_slot_id, symptoms, suspected_disease, status, reschedule_count, reminder_sent, created_at)
+SELECT
+    4,
+    6,
+    id,
+    'Đau bụng âm ỉ, đầy hơi, khó tiêu sau bữa ăn',
+    'Viêm dạ dày hoặc hội chứng ruột kích thích',
+    'COMPLETED',
+    0,
+    true,
+    NOW() - INTERVAL '6 days'
+FROM time_slots
+WHERE status = 'AVAILABLE' AND doctor_id = 6
+ORDER BY start_time
+LIMIT 1;
+
+UPDATE time_slots SET status = 'BOOKED'
+WHERE id = (SELECT time_slot_id FROM appointments ORDER BY id DESC LIMIT 1);
+
+-- Appointment 7: Patient 5 with Dr. David Garcia (Endocrinology)
+INSERT INTO appointments (patient_id, doctor_id, time_slot_id, symptoms, suspected_disease, status, reschedule_count, reminder_sent, created_at)
+SELECT
+    5,
+    7,
+    id,
+    'Mệt mỏi kéo dài, tăng cân, rụng tóc nhiều',
+    'Suy giảm chức năng tuyến giáp',
+    'COMPLETED',
+    0,
+    true,
+    NOW() - INTERVAL '7 days'
+FROM time_slots
+WHERE status = 'AVAILABLE' AND doctor_id = 7
+ORDER BY start_time
+LIMIT 1;
+
+UPDATE time_slots SET status = 'BOOKED'
+WHERE id = (SELECT time_slot_id FROM appointments ORDER BY id DESC LIMIT 1);
+
+-- Appointment 8: Patient 6 with Dr. Lisa Anderson (Pulmonology)
+INSERT INTO appointments (patient_id, doctor_id, time_slot_id, symptoms, suspected_disease, status, reschedule_count, reminder_sent, created_at)
+SELECT
+    6,
+    8,
+    id,
+    'Khó thở, thở khò khè, ho nhiều vào ban đêm',
+    'Hen phế quản',
+    'COMPLETED',
+    0,
+    true,
+    NOW() - INTERVAL '8 days'
+FROM time_slots
+WHERE status = 'AVAILABLE' AND doctor_id = 8
+ORDER BY start_time
+LIMIT 1;
+
+UPDATE time_slots SET status = 'BOOKED'
+WHERE id = (SELECT time_slot_id FROM appointments ORDER BY id DESC LIMIT 1);
+
+-- Appointment 9: Patient 7 with Dr. James Martinez (Nephrology)
+INSERT INTO appointments (patient_id, doctor_id, time_slot_id, symptoms, suspected_disease, status, reschedule_count, reminder_sent, created_at)
+SELECT
+    7,
+    9,
+    id,
+    'Sưng chân, sưng mắt buổi sáng, tiểu ít',
+    'Suy thận cấp',
+    'COMPLETED',
+    0,
+    true,
+    NOW() - INTERVAL '9 days'
+FROM time_slots
+WHERE status = 'AVAILABLE' AND doctor_id = 9
+ORDER BY start_time
+LIMIT 1;
+
+UPDATE time_slots SET status = 'BOOKED'
+WHERE id = (SELECT time_slot_id FROM appointments ORDER BY id DESC LIMIT 1);
+
+-- Appointment 10: Patient 8 with Dr. Maria Rodriguez (Rheumatology)
+INSERT INTO appointments (patient_id, doctor_id, time_slot_id, symptoms, suspected_disease, status, reschedule_count, reminder_sent, created_at)
+SELECT
+    8,
+    10,
+    id,
+    'Đau và cứng khớp ngón tay buổi sáng, sưng đỏ',
+    'Viêm khớp dạng thấp',
+    'COMPLETED',
+    0,
+    true,
+    NOW() - INTERVAL '10 days'
+FROM time_slots
+WHERE status = 'AVAILABLE' AND doctor_id = 10
+ORDER BY start_time
+LIMIT 1;
+
+UPDATE time_slots SET status = 'BOOKED'
+WHERE id = (SELECT time_slot_id FROM appointments ORDER BY id DESC LIMIT 1);
+
+-- Appointment 11: Patient 9 with Dr. Robert Johnson (Oncology)
+INSERT INTO appointments (patient_id, doctor_id, time_slot_id, symptoms, suspected_disease, status, reschedule_count, reminder_sent, created_at)
+SELECT
+    9,
+    11,
+    id,
+    'Ho ra máu, gầy sút cân nhanh, mệt mỏi kéo dài',
+    'Cần kiểm tra ung thư phổi',
+    'COMPLETED',
+    0,
+    true,
+    NOW() - INTERVAL '11 days'
+FROM time_slots
+WHERE status = 'AVAILABLE' AND doctor_id = 11
+ORDER BY start_time
+LIMIT 1;
+
+UPDATE time_slots SET status = 'BOOKED'
+WHERE id = (SELECT time_slot_id FROM appointments ORDER BY id DESC LIMIT 1);
+
+-- Appointment 12: Patient 10 with Dr. Jennifer Brown (Ophthalmology)
+INSERT INTO appointments (patient_id, doctor_id, time_slot_id, symptoms, suspected_disease, status, reschedule_count, reminder_sent, created_at)
+SELECT
+    10,
+    12,
+    id,
+    'Nhìn mờ, khó nhìn xa, đau mắt khi đọc sách lâu',
+    'Cận thị hoặc viễn thị',
+    'COMPLETED',
+    0,
+    true,
+    NOW() - INTERVAL '12 days'
+FROM time_slots
+WHERE status = 'AVAILABLE' AND doctor_id = 12
+ORDER BY start_time
+LIMIT 1;
+
+UPDATE time_slots SET status = 'BOOKED'
+WHERE id = (SELECT time_slot_id FROM appointments ORDER BY id DESC LIMIT 1);
+
+-- Appointment 13: Patient 11 with Dr. William Davis (ENT)
+INSERT INTO appointments (patient_id, doctor_id, time_slot_id, symptoms, suspected_disease, status, reschedule_count, reminder_sent, created_at)
+SELECT
+    11,
+    13,
+    id,
+    'Đau tai, chảy mủ, giảm thính lực',
+    'Viêm tai giữa',
+    'COMPLETED',
+    0,
+    true,
+    NOW() - INTERVAL '13 days'
+FROM time_slots
+WHERE status = 'AVAILABLE' AND doctor_id = 13
+ORDER BY start_time
+LIMIT 1;
+
+UPDATE time_slots SET status = 'BOOKED'
+WHERE id = (SELECT time_slot_id FROM appointments ORDER BY id DESC LIMIT 1);
+
+-- Appointment 14: Patient 12 with Dr. Susan Miller (Urology)
+INSERT INTO appointments (patient_id, doctor_id, time_slot_id, symptoms, suspected_disease, status, reschedule_count, reminder_sent, created_at)
+SELECT
+    12,
+    14,
+    id,
+    'Tiểu buồi, tiểu rát, đau bụng dưới',
+    'Viêm đường tiết niệu',
+    'COMPLETED',
+    0,
+    true,
+    NOW() - INTERVAL '14 days'
+FROM time_slots
+WHERE status = 'AVAILABLE' AND doctor_id = 14
+ORDER BY start_time
+LIMIT 1;
+
+UPDATE time_slots SET status = 'BOOKED'
+WHERE id = (SELECT time_slot_id FROM appointments ORDER BY id DESC LIMIT 1);
+
+-- Appointment 15: Patient 13 with Dr. Thomas Moore (Orthopedics)
+INSERT INTO appointments (patient_id, doctor_id, time_slot_id, symptoms, suspected_disease, status, reschedule_count, reminder_sent, created_at)
+SELECT
+    13,
+    15,
+    id,
+    'Đau lưng lan xuống chân, tê bì, khó đi lại',
+    'Thoát vị đĩa đệm',
+    'COMPLETED',
+    0,
+    true,
+    NOW() - INTERVAL '15 days'
+FROM time_slots
+WHERE status = 'AVAILABLE' AND doctor_id = 15
+ORDER BY start_time
+LIMIT 1;
+
+UPDATE time_slots SET status = 'BOOKED'
+WHERE id = (SELECT time_slot_id FROM appointments ORDER BY id DESC LIMIT 1);
+
+COMMIT;
+
+COMMIT;
